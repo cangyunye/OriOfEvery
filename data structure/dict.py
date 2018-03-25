@@ -8,12 +8,15 @@
     查找和插入的时间随着元素的增加而增加；
     占用空间小，浪费内存很少。
     所以，dict是用空间来换取时间的一种方法。
+    
 """
 # dict_menu = dict()
 #初始化dict_menu
 dict_menu = {'eggs':1.00,'milk':3.50,'baozi':2.00,'dumpling':15.00}
 dict_menu['gongbaojiding'] = 23.00
 dict_menu['qingjiaochaojirou'] = 15.00
+dict_menu_new = {'juanxincai':1.5,'dabaicai':2.00,'shengcai':3.15}
+dict_menu.update(dict_menu_new)
 print(type(dict_menu))
 print('eggs=',dict_menu['eggs'],'\npotato=',dict_menu.get('potato', 3.2))#不存在的则给默认值
 print('------------------dict_menu---------------------\n',dict_menu)
@@ -51,3 +54,8 @@ for i5,i6 in day_in_month_setdict.items():#遍历字典所有数据项
 print('-------------------day_in_month_setdict.items()--------------------')
 for i5 in day_in_month_setdict.items():#遍历字典所有数据项
     print (i5)
+dict_menu.update()
+print(dict_menu.get('eggs'))#取得字典值
+dict_menu.pop('eggs')#删除字典值
+dict_menu.setdefault('eggs',9.99)#如果eggs不存在，则返回9.99,类似于get()
+print(dict_menu.get('eggs'))  # 取得字典值

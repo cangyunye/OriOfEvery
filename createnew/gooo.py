@@ -1,14 +1,10 @@
-from functools import reduce
-def is_odd(n):
-    yield n
-    i = 3
-    print (i)
+from collections import Counter
+"""Counter是一个简单的计数器，例如，统计字符出现的个数"""
+
 def main():
-    l=[1,2,3,4]
-    # print(list(map(is_odd,l)))
-    # #filter根据list的真假，返回原有list值
-    # print(list(filter(is_odd, l)))
-    for x in l:
-        print(next(is_odd(x)))
+    c = Counter()
+    for ch in 'programming':
+        c[ch] = c[ch] + 1
+    print(c)
 if __name__ == '__main__':
     main()
