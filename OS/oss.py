@@ -32,8 +32,9 @@ def main():
     fd.close()
     with open('wrt.txt','r') as frd: #with无需再close()
         print(frd.readlines())#按行读取转换为列表
+        print(frd.readline())#逐行读取
     with open('wrt.txt','r') as frz: #with无需再close()
-        print(frz.read())#全部读取
+        print(frz.read())#全部读取或按字节读取
 
 if __name__ == '__main__':
     main()
