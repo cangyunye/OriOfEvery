@@ -2,11 +2,8 @@
 print('汇率转换')
 
 rmb_str_value = input('请输入带单位金额如（100USD):')
-
 usd_vs_rmb = 6.77
-
 unit = rmb_str_value[-3:]
-
 money = eval(rmb_str_value[:-3])
 
 if unit == 'CNY':
