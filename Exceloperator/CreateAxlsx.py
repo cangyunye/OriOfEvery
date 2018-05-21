@@ -22,8 +22,11 @@ def matialize(arg):
 def createxlsx(wbname):
     #创建表文件
     wb = openpyxl.Workbook()
-    sheet = wb.create_sheet(title='Spring')
-    sheet = wb.create_sheet(title='Autumn')
+    sheet1 = wb.create_sheet(title='Spring')#创建标签
+    sheet2 = wb.copy_worksheet(from_worksheet='Spring')
+    sheet2.title = 'winter'
+    wb.create_sheet(title='Autumn')
+    # wb.remove_sheet(title='Autumn') #删除标签
     wb.save(filename=wbname)
 
 @log
@@ -35,8 +38,8 @@ def savetoexcel(data,fields,sheetname,wbname):
     sheet = wb.active #获取当前active的Worksheet
     sheet.title = sheetname #定义active的标签名
 
-    # sheet = wb[sheetname] #读取sheetname
-    wb.sheetnames
+    # sheet = wb[sheetname] #选择读取sheetname
+    # print("表单名称:",wb.sheetnames)
     field = 1 #定义输入坐标
 
     for field in range(1,len(fields)+1): #写入表头(起点为r1,c1)
@@ -78,6 +81,7 @@ def testtoexcel(data,fields,sheetname,wbname):
     sheet = wb.active #获取当前active的Worksheet
     sheet.title = sheetname #定义active的标签名
     to_insert=sheet.cell(row=1,column=1,value='Ttte1')
+
     wb.save(filename=wbname)
 
 def main():
