@@ -294,6 +294,16 @@ for col in range(1,10):
 
 # In[4]:
 
+#Since you're assigning this NamedStyle to more than one cell, it makes sense to register it to your workbook.
+wb.add_named_style('style_example1')
+wb.add_named_style('style_example2')
+wb.add_named_style('style_example3')
+wb.add_named_style('style_example4')
+wb.add_named_style('style_example5')
+wb.add_named_style('style_example6')
+wb.add_named_style('style_example7')
+wb.add_named_style('style_example8')
+wb.add_named_style('style_example9')
 
 wb.save(filename=dest_filename)
 
