@@ -1,3 +1,4 @@
+#对于网站打开时弹出提示框，验证方案
 from urllib.request import HTTPPasswordMgrWithDefaultRealm,HTTPBasicAuthHandler,build_opener
 from urllib.error import URLError
 username = 'username'
