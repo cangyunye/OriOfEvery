@@ -26,8 +26,14 @@ print('2 in l2=','2' in l2)
 它的结构是在一个中括号里包含一个表达式，然后是一个for语句，然后是0个或多个for或者if语句。那个表达式可以是任意的，意思是你可以在列表中放入任意类型的对象。返回结果将是一个新的列表，在这个以if和for语句为上下文的表达式运行完成之后产生。
 规范
 """
-variable = [out_exp for out_exp in input_list if out_exp == 2]
+#variable = [out_exp for out_exp in input_list if out_exp == True]
+
 # 这里是另外一个简明例子:
 multiples = [i for i in range(30) if i % 3 is 0]
 print(multiples)
 # Output: [0, 3, 6, 9, 12, 15, 18, 21, 24, 27]
+
+# 双层或多层循环
+mulcircle = [m + n for m in 'ABC' for n in 'EFG']
+print(mulcircle)
+# 输出了所有可能的组合
