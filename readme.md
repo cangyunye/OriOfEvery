@@ -1,3 +1,31 @@
-# 这个项目只是我用来囤积一些所学基础知识
+# 库内容整理
 
-可以说是一些造好的小轮子，偶尔可以来此搬运一下
+> 后续补充使用库及标题
+
+## webspider
+
+1. urllib
+
+2. request
+
+3. re
+
+4. lxml
+
+## MachineLearning
+
+1. scikitlearn
+
+2. numpy
+
+3. pandas
+
+4. matpoltlib
+
+## Exceloperator
+
+1. openpyxl
+
+## regular_expression
+
+1. re
