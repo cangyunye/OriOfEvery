@@ -36,7 +36,7 @@ def main():
     """
         主函数
     """
-    filepath = input('请输入文件名称：')
+    filepath = 'shanghai_aqi.json'
     filename, file_ext = os.path.splitext(filepath)
 
     if file_ext == '.json':

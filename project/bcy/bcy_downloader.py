@@ -32,6 +32,7 @@ import os
 import random
 from bs4 import BeautifulSoup
 import re
+import json
 
 class BCY_DownLoader(obejct):
     #The Strategy of Bcy_downloader
@@ -137,9 +138,15 @@ json_img=soupd.find_all(name='script',text=re.compile('JSON.parse(.*);(.*)'))
 
 json_img=re.findall('JSON.parse\("(.*)"\);',str(json_img))
 import json
-str_j=re.sub('\\\\','\\',json_img[0])
+str_j=re.sub(r'\\','',json_img[0])
+str_j=eval("'{}'".format(json_img[0]))
+str_j=json_img[0].replace('\\','')
+str_j=json_img[0]
 jd=json.loads(str_j)
-
+#图片链接
+json_multi=jd['detail']['post_data']['multi']
+https://img-bcy-qn.pstatp.com/coser/58850/post/c0c4p/7b68a2b0c88511e7b1be05ee2d688961.jpg?imageMogr2/auto-orient/strip|watermark/2/text/wqnmmJ_ph45zYW9yaQrljYrmrKHlhYMt5LqM5qyh5YWD5Yib5L2c6ICF56S-5Yy6/fontsize/500/fill/I2NjY2NjYw==/dx/16/dy/12/font/5b6u6L2v6ZuF6buR
+https:u002Fu002Fimg-bcy-qn.pstatp.comu002Fcoseru002F58850u002Fpostu002Fc0c4pu002F7b68a2b0c88511e7b1be05ee2d688961.jpgu002Fw650
 soup.find_all(name='a',attrs={'class':'db posr ovf'})[0].attrs['title']
 soup.find_all(name='a',attrs={'class':'db posr ovf'})[0].attrs['href']
 soup.find_all(name='ul',attrs={'class':'l-clearfix gridList smallCards'})
