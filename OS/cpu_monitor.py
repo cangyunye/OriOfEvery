@@ -28,7 +28,6 @@
             return 0  
 
         #cpu usage=[(user_2 +sys_2+nice_2) - (user_1 + sys_1+nice_1)]/(total_2 - total_1)*100 
-        #www.iplaypy.com 
 
         usni1=long(cpustr[1])+long(cpustr[2])+long(cpustr[3])+long(cpustr[5])
               +long(cpustr[6])+long(cpustr[7])+long(cpustr[4])  

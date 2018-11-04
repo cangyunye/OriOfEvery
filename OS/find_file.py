@@ -46,7 +46,6 @@ def SearchFile(path, src):
 			except:
 				pass
 	
-#www.iplaypy.com	
 #查找当前所有磁盘目录下是否有要找的字符
 def   SearchAllDirFile(src):	
 	curdisks = existdisk()

@@ -124,9 +124,7 @@ if __name__ == '__main__':
         #如果导出的文件不存在，则导出文件
         print "正在读取文件列表……"
         fileList=listDir (fileList,path)
-        writeListToFile(fi
-2000
-leList,txtFile)
+        writeListToFile(fileList,txtFile)
         print "已保存到文件："+txtFile
         
     raw_input("\n按 回车键 退出\n")
