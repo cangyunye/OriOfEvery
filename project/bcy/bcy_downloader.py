@@ -84,17 +84,32 @@ class BCY_DownLoader(obejct):
     def get_content(self,*url):
         """
         return article_list according to methods.
+        if instance(url,list) :
+            for i in url:
+                rg=requests.get(i,headers=self.headers)
+                yield rg.text #######
+        content=self.get_content(url)
+        self.detail_list(content)
         """
-        if self.Method:
-            url=self.url
-        try:
-            rg=requests.get(url,headers=self.headers)
-            if rg.status_code == codes.ok:
-                return rg.text
-        except requests.ConnectionError:
-            return None    
+        if isinstance(url,list) :
+            try:
+                for i in url:
+                    rg=requests.get(i,headers=self.headers)
+                    if rg.status_code == codes.ok:
+                        yield rg.text
+            except requests.ConnectionError :
+                return None
 
-    def get_pages(self,content,**pages):
+        elif self.Method :
+            url=self.url
+            try:
+                rg=requests.get(url,headers=self.headers)
+                if rg.status_code == codes.ok:
+                    return rg.text
+            except requests.ConnectionError:
+                return None    
+
+    def get_pages_range(self,content,**pages):
         """
         before implement func detail_list,
         we can set the range of page we need to process,
@@ -106,24 +121,29 @@ class BCY_DownLoader(obejct):
         """     
         
         try:
-            #需要重新设定，是否使用像numpy的接收元组(1,2)作为参数
+            #可以考虑，是否使用类似numpy的接收元组(1,2)作为参数
             begin_page = pages['begin']
             end_page = pages['end']
         except NameError :
             soup = BeautifulSoup(content,'lxml')
             begin_page = 1
-            #这里也有可能某些用户没有Like内容，需要捕获异常，不过测试了下，为空不影响页面使用，但可能影响下面的循环range
-            end_page = soup.find_all(name='li',attrs={'class':'pager__item js-nologinLink'},text='尾页')    
-            end_page = end_page[0].a.get('href')
-            end_page = re.search('p=(\d+)',end_page)
-            end_page = end_page.groups()[0]
+            #这里也有可能某些用户没有Like内容，影响后续range，需要设定空值=1
+            end_page = soup.find(name='li',attrs={'class':'pager__item js-nologinLink'},text='尾页')  
+            if end_page:  
+                end_page = end_page.a.get('href')
+                end_page = re.search('p=(\d+)',end_page)
+                end_page = end_page.groups()[0]
+            else:
+                end_page=begin_page
         finally:
-            #是否使用yield返回每个页面，可以考虑
-            for page_num in ranges(int(begin_page)+1,int(end_page)+1):
-                url=urljoin(self.bcyurl,'{0}?&p={1}'.format(self.url_join,page_num))
-                content=self.get_content(url)
-                self.detail_list(content)
-
+            #可以考虑.是否使用yield返回每个页面
+            pages_list=[] 
+            if end_page == begin_page:
+                pages_list.append = urljoin(self.bcyurl,'{0}?&p={1}'.format(self.url_join,begin_page))
+            else:
+                for page_num in ranges(int(begin_page)+1,int(end_page)+1):
+                    pages_list.append(urljoin(self.bcyurl,'{0}?&p={1}'.format(self.url_join,page_num)))
+        return pages_list
 
 
     def detail_list(self, content):
@@ -170,16 +190,24 @@ class BCY_DownLoader(obejct):
         pass
     def usage():
         """
-        step1:
+        #step1:
         bcy=BCY_DownLoader()
-        step2:
+        #step2:
         bcy.set_uid(605084)
-        step3:
+        #step3:
         bcy.Method_Selector(1)
-        step4: ignore this param_url if exists step3
+        #step4: ignore this param_url if exists step3
         like_content=bcy.get_content(url)
-        step5:
-        detail_list
+        #step5:
+        page_list=get_pages_range(like_content,begin=1,end=2)
+        #step6:
+        all_content=get_content(page_list)
+        #step7:
+        detail_list_all = []
+        for detail in all_content:
+            detail_list_all.append(detail_list(detail))
+        可能得改下思路，每次处理一个页面之后再用重复的流程处理下一个
+
         """
 
         
