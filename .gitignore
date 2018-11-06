@@ -43,7 +43,19 @@ $RECYCLE.BIN/
 .AppleDesktop
 .ipynb_checkpoints
 .idea
+.vscode
+trainingDigits
+testDigits
 Network Trash Folder
 Temporary Items
 .apdisk
 
+
+
+*.png
+*.gif
+*.pyc
+
+board_dict.txt
+numpy/__pycache__/numpy.cpython-36.pyc
+OS/amadefolder/arent/nothing/wrt.txt
