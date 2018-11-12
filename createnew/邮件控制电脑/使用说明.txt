@@ -1,0 +1,17 @@
+# 微信公众号: Charles的皮卡丘
+Step1：修改配置文件
+修改config.json文件
+sender为发送指令方邮箱
+receiver为接收指令方邮箱(enable_ssl即是否加密发送邮件，port为端口号)
+可通过修改word2cmd.json来增加快捷命令
+代码可扩展性较好，欢迎大家自己增加功能
+Step2：安装需要的库
+pip install -r requirements
+Step3：运行Server.py
+python Server.py
+
+
+说明：
+若无法pip安装email模型，尝试“easy_install email”
+
+密码为客户端授权密码，非登录密码 -> 新浪邮箱的授权码=登录密码
