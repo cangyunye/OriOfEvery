@@ -191,22 +191,28 @@ class BCY_DownLoader(obejct):
     def usage():
         """
         #step1:
-        bcy=BCY_DownLoader()
+        bcy=BCY_DownLoader() #设置类实例
         #step2:
-        bcy.set_uid(605084)
+        bcy.set_uid(605084)  #设置用户ID
         #step3:
-        bcy.Method_Selector(1)
-        #step4: ignore this param_url if exists step3
-        like_content=bcy.get_content(url)
+        bcy.Method_Selector(1)  #选择模式 1 定义为"喜欢"页
+        #step4: ignore this param_url if exists step3 
+        like_content=bcy.get_content(url) #获取页面所有预览页html代码
         #step5:
-        page_list=get_pages_range(like_content,begin=1,end=2)
+        page_list=bcy.get_pages_range(like_content,begin=1,end=2) #分析"喜欢"页面html代码，返回所有的图文地址页
         #step6:
-        all_content=get_content(page_list)
+        all_content=bcy.get_content(page_list) #对所有图文地址页返回html代码
         #step7:
-        detail_list_all = []
+        detail_list_all = []  #遍历所有页面，获取coser 的uid和图片列表
         for detail in all_content:
             detail_list_all.append(detail_list(detail))
         可能得改下思路，每次处理一个页面之后再用重复的流程处理下一个
+        #step8:
+        #根据coser的uid建目录
+        #step9:
+        #根据coser的uid下载图片
+        #step10:
+        #设置各种随机sleep时间
 
         """
 
