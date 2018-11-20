@@ -34,8 +34,9 @@ class BCY_DownLoader(obejct):
     def __init__(self,**info):
         """
         [initial]
-        param bcyurl:base website_url for urljoin.
-        param headers:for requests incase of prevented by bcy.net.
+        param:
+            bcyurl:base website_url for urljoin.
+            headers:for requests incase of prevented by bcy.net.
         """
         self.bcyurl='https://bcy.net/'
         self.headers={
@@ -44,13 +45,17 @@ class BCY_DownLoader(obejct):
 
     def Method_Selector(self,Method=1):
         """
-        param Methods:Options for instance
-        1: Get pics from "喜欢"(like) page.
-        2: Get pics from "原作/标签"(original or labels) page.
-        3: Get pics from the Top List. 
-        4: Get the videos.
-        5: Get the novels.
-        6: Get "comment" from an article
+        params:
+            Methods:
+            Options for instance
+            1: Get pics from "喜欢"(like) page.
+            2: Get pics from "原作/标签"(original or labels) page.
+            3: Get pics from the Top List. 
+            4: Get the videos.
+            5: Get the novels.
+            6: Get "comment" from an articlec
+        return:
+            self.url
         """
         self.Method=Method
         if not self.set_uid :
@@ -71,18 +76,24 @@ class BCY_DownLoader(obejct):
         else :
             print("Check the Method Please!")
         self.url=urljoin(self.bcyurl,self.url_join)
+        return self.url
 
 
 
     def set_uid(self,uid):
         """
-        param uid: the user_id of bcy.net
+        param: 
+            uid: the user_id of bcy.net
         """
         self.uid=uid
 
 
     def get_content(self,*url):
         """
+        params:
+            *url:
+        return:
+            html source code of Bs4.
         return article_list according to methods.
         if instance(url,list) :
             for i in url:
@@ -96,15 +107,16 @@ class BCY_DownLoader(obejct):
                 for i in url:
                     rg=requests.get(i,headers=self.headers)
                     if rg.status_code == codes.ok:
+                        rg.encoding = 'utf-8'
                         yield rg.text
             except requests.ConnectionError :
                 return None
-
         elif self.Method :
             url=self.url
             try:
                 rg=requests.get(url,headers=self.headers)
                 if rg.status_code == codes.ok:
+                    rg.encoding = 'utf-8'
                     return rg.text
             except requests.ConnectionError:
                 return None    
@@ -114,8 +126,9 @@ class BCY_DownLoader(obejct):
         before implement func detail_list,
         we can set the range of page we need to process,
         or process all the pages
-        param **pages: dict for page begin and end,eg.begin=1,end=2
-        eg.
+        params:
+            **pages: dict for page begin and end,eg.begin=1,end=2
+            eg.
             pages={'begin':1,'end':2} 
         return list of pages
         """     
@@ -148,7 +161,11 @@ class BCY_DownLoader(obejct):
 
     def detail_list(self, content):
         """
-        generator detail_article_list 
+        Generate detail_article_list 
+        params:
+            content: html code from detail_page
+        return:
+            dict['title']=href
         """
         soup = BeautifulSoup(content,'lxml')
         #可以格式化或不格式化，没影响
@@ -161,18 +178,32 @@ class BCY_DownLoader(obejct):
                 tag.li.a.attrs['title']:tag.li.a.attrs['href']
             }
             
-    def parse_detail(self,**kwargs):
-        """
-        Get the pics from detail pages
-        return article with img info as json
+    def parse_detail(self,**detail_page):
+        """    
+        params:
+            **detail_page:Get the pics from detail pages
+        return:
+            article with img info as json
         """
         #直接输入page=完整连接，或者href相对连接自动拼接
         detail_page='https://bcy.net/item/detail/6488041845753405198'
         rgd = requests.get(detail_page,headers=self.headers)
+        rgd.encoding = 'utf-8'
         soupd = BeautifulSoup(rgd.text,'lxml')
+        """
         soupd.article.find_all(attrs={'class':'img-wrap-inner'})
         soupd.article.find_all(attrs={'class':'content'})
         soupd.article.find_all(attrs={'class':'album'})
+        """
+        json_img = soupd.find_all(name='script',text=re.compile('JSON.parse(.*);(.*)'))
+        json_img=re.findall('JSON.parse\("(.*)"\);',str(json_img))
+        str_j=eval("'{}'".format(json_img[0]))
+        jd=json.loads(str_j)
+        json_multi=jd['detail']['post_data']['multi']
+        #从字典jd里面获取内容
+        for img_l in json_multi:
+            print(img_l['path'].rstrip('/w650'))
+
         return article_json
 
     def save_img(self,article_json):
@@ -197,7 +228,7 @@ class BCY_DownLoader(obejct):
         #step3:
         bcy.Method_Selector(1)  #选择模式 1 定义为"喜欢"页
         #step4: ignore this param_url if exists step3 
-        like_content=bcy.get_content(url) #获取页面所有预览页html代码
+        like_content=bcy.get_content(url) #获取页面所有预览页html代码,这里不应该为显性的函数,url为内部定义
         #step5:
         page_list=bcy.get_pages_range(like_content,begin=1,end=2) #分析"喜欢"页面html代码，返回所有的图文地址页
         #step6:
@@ -212,8 +243,9 @@ class BCY_DownLoader(obejct):
         #step9:
         #根据coser的uid下载图片
         #step10:
-        #设置各种随机sleep时间
-
+        #装饰器设置各种随机sleep时间
+        #step11:
+        使用装饰器或者logging记录日志
         """
 
         
@@ -223,6 +255,8 @@ class BCY_DownLoader(obejct):
 def main():
     bcy=BCY_DownLoader()
     bcy.set_uid(605084)
-
+    url=bcy.Method_Selector(1)
+    like_content=bcy.get_content(url)
+    get_pages_range(like_content)
 if __name__ == '__main__':
     main()
