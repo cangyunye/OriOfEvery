@@ -15,6 +15,7 @@ import random
 from datetime import datetime as dt
 from time import sleep
 import functools
+# import types
 
 __version__bcy__ = '1.0.0'
 
@@ -90,6 +91,18 @@ class BcyDownLoader():
             self.set_uid(int(random.random()*2000000))
         if self.Method == 1:
             self.url_join = '/u/{0}/like'.format(self.uid)
+            self.url = urljoin(self.bcyurl, self.url_join)
+            likepg = self.get_content(self.url) #获取"like"页html代码
+            likepg_list = self.page_range(likepg,1,2) #分析并输出选择的"like"页码范围
+            for page in likepg_list:
+                #获取like"页html代码
+                like = self.get_content(page) 
+                # print('like',like)
+                #提取当前"like"页所有detail页码
+                likedt_list = self.detail_list(like)
+                # print('likedt_list',likedt_list)
+                #下载所有detail页内图片
+                self.parse_detail(likedt_list)
         elif self.Method == 2:
             self.url_join = '/u/{0}/like/circle'.format(self.uid)
         elif self.Method == 3:
@@ -126,64 +139,63 @@ class BcyDownLoader():
         content=self.get_content(url)
         self.detail_list(content)
         """
-        if isinstance(url, list):
-            try:
-                for i in url:
-                    rg = requests.get(i, headers=self.headers)
-                    if rg.status_code == codes.ok:
-                        rg.encoding = 'utf-8'
-                        yield rg.text
-            except requests.ConnectionError:
-                return None
-        elif self.Method:
-            url = self.url
-            try:
-                rg = requests.get(url, headers=self.headers)
-                if rg.status_code == codes.ok:
-                    rg.encoding = 'utf-8'
-                    return rg.text
-            except requests.ConnectionError:
-                return None
+        # if isinstance(url, list):
+        #     try:
+        #         for i in url:
+        #             rg = requests.get(i, headers=self.headers)
+        #             if rg.status_code == codes.ok:
+        #                 rg.encoding = 'utf-8'
+        #                 return rg.text
+        #     except requests.ConnectionError:
+        #         return None
+        # elif self.Method:
+        #   url = self.url
+        try:
+            rg = requests.get(url, headers=self.headers)
+            if rg.status_code == codes.ok:
+                rg.encoding = 'utf-8'
+                return rg.text
+        except requests.ConnectionError:
+            return None
     @log
-    def page_range(self, content, **pages):
+    def page_range(self,content,*prange):
         """
         before implement func detail_list,
         we can set the range of page we need to process,
         or process all the pages
         params:
-            **pages: dict for page begin and end,eg.begin=1,end=2
-            eg.
-            pages={'begin':1,'end':2} 
-        return list of pages
+            *prange: tuple for page begin to end.
+            eg.begin=1,end=20
+            prange=(1,20)
+        return list of like page range
         """
-
-        try:
-            # 可以考虑，是否使用类似numpy的接收元组(1,2)作为参数
-            begin_page = pages['begin']
-            end_page = pages['end']
-        except NameError:
-            soup = BeautifulSoup(content, 'lxml')
+        if len(prange) == 2:
+            begin_page,end_page = prange
+        elif len(prange) == 1:
+            begin_page = prange[0]
+            end_page = self.tailpage(content)
+        else :
             begin_page = 1
-            # 这里也有可能某些用户没有Like内容，影响后续range，需要设定空值=1
-            end_page = soup.find(
-                name='li', attrs={'class': 'pager__item js-nologinLink'}, text='尾页')
-            if end_page:
-                end_page = end_page.a.get('href')
-                end_page = re.search('p=(\d+)', end_page)
-                end_page = end_page.groups()[0]
-            else:
-                end_page = begin_page
-        finally:
-            # 可以考虑.是否使用yield返回每个页面
-            pages_list = []
-            if end_page == begin_page:
-                pages_list.append = urljoin(
-                    self.bcyurl, '{0}?&p={1}'.format(self.url_join, begin_page))
-            else:
-                for page_num in ranges(int(begin_page)+1, int(end_page)+1):
-                    pages_list.append(
-                        urljoin(self.bcyurl, '{0}?&p={1}'.format(self.url_join, page_num)))
+            end_page = self.tailpage(content)
+        pages_list = []
+        for page_num in range(int(begin_page), int(end_page)+1):
+            pages_list.append(
+                urljoin(self.bcyurl, '{0}?&p={1}'.format(self.url_join, page_num)))
         return pages_list
+
+    @log    
+    def tailpage(self,content) : 
+        #判断尾页
+        soup = BeautifulSoup(content, 'lxml')
+        end_page = soup.find(
+            name='li', attrs={'class': 'pager__item js-nologinLink'}, text='尾页')
+        if end_page:
+            end_page = end_page.a.get('href')
+            end_page = re.search('p=(\d+)', end_page)
+            end_page = end_page.groups()[0]
+        else:
+            end_page = 1
+        return end_page
 
     @log
     def detail_list(self, content):
@@ -196,30 +208,37 @@ class BcyDownLoader():
         """
         soup = BeautifulSoup(content, 'lxml')
         soup.prettify()
-        # Bs_list形式存储所有找到的图文href
-        # like_tags=soup.find_all(name='ul',attrs={'class':'l-clearfix gridList smallCards'})
         like_tags = soup.find_all(name='a', attrs={'class': 'db posr ovf'})
+        detail_list = []
         for tag in like_tags:
-            yield {
-                tag.li.a.attrs['title']: tag.li.a.attrs['href']
-            }
+            detail_list.append(urljoin(self.bcyurl, tag.attrs['href']))
+        # print('detail_list\n',detail_list)
+        # print(type(detail_list))
+        return detail_list
+
     @log
     def parse_detail(self, detail_page=None,**detail):
         """    
         params:
             detail_page:pages of pics with articles
-            **detail:{'dn'='6488041845753405198'}
+            **detail:{'dn':'6488041845753405198'}
+            or {'dn1':'6488041845753405198','dn2':'6214365223982227214'}
+
         """
         if len(detail) > 0:
-            detail_page = urljoin(self.detailurl, detail['dn'])
-        elif len(detail) == 0 and isinstance(detail_page,list): 
+            print('11')
+            for dn in detail.values():
+                detail_page = urljoin(self.detailurl, dn)
+        elif isinstance(detail_page,list): 
             for de_page in detail_page:
+                print('de_page',de_page)
                 self.parse_detail(de_page)
         elif isinstance(detail_page,str):
-            detail_page = urljoin(self.bcyurl, self.detailurl)
-        else:
-            print('Correct detail page have not been input.')
-        print("parse page:{}".format(detail_page)) 
+            pass
+        else :
+            raise ValueError,'Correct detail page have not been input.'
+        
+        print("parsing page:{}".format(detail_page)) 
         if detail:
             detail_num = detail['dn']
         else:
@@ -339,10 +358,10 @@ def main():
     bcy = BcyDownLoader()
     bcy.set_uid(605084)
     url = bcy.Method_Selector(1)
-    # like_content = bcy.get_content(url)
-    # pagerange = bcy.page_range(like_content)
-    bcy.parse_detail(dn='6578730940602777859')
-
+    """
+    bcy = BcyDownLoader()
+    bcy.parse_detail(dn='6578730940602777859') #指定detail下载，可单独使用
+    """
 
 if __name__ == '__main__':
     main()
