@@ -33,21 +33,21 @@ class BCY_DownLoader(obejct):
 
     """
 
-    def __init__(self,batch=10, **info):
+    def __init__(self, **info):
         """
         [initial]
         param:
             bcyurl:base url of banciyuan.
             detailurl:basesite of detail article
             headers:for requests incase of prevented by bcy.net.
-            batch:count of download every time.
+            # batch:count of download every time.
         """
         self.bcyurl = 'https://bcy.net/'
         self.detailurl = 'https://bcy.net/item/detail/'
         self.headers = {
             'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36'
         }
-        self.batch = batch
+  
     @log
     def Method_Selector(self, Method=1):
         """
@@ -270,7 +270,7 @@ class BCY_DownLoader(obejct):
     @delay
     def download(self,inputs):
         urlretrieve(inputs)
-        
+
     def log(text=None):
         @functools.wraps(func)
         def wrapper(*args,**kw):
