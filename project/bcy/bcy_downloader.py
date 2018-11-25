@@ -4,13 +4,15 @@
 import requests
 from urllib.parse import urlencode
 from urllib.parse import urljoin
+from urllib.request import urlretrieve
 from requests import codes
 # from hashlib import md5
 # from multiprocessing.pool import Pool
 from bs4 import BeautifulSoup
 import re
+import os
 import random
-from datetime import datetim as dt
+from datetime import datetime as dt
 from time import sleep
 import functools
 
@@ -18,14 +20,34 @@ __version__bcy__ = '1.0.0'
 
 __bibtex__ = r"""@Article{cangyunye:2018,
   Author    = {cangyunye},
-  Title     = {BCY_DownLoader:collector for bcy.net},
+  Title     = {BcyDownLoader:collector for bcy.net},
   abstract  = {.},
   publisher = {cangyunye},
   year      = 2018
 }"""
 
+def log(func):
+    @functools.wraps(func)
+    def wrapper(*args,**kw):
+        print("{}:Call {}".format(dt.now(),func.__name__))
+        return func(*args,**kw)
+    return wrapper
 
-class BCY_DownLoader(obejct):
+        
+def delay(func):
+    """
+    random time for sleep as decorator
+    """
+    def wrapper(*args,**kw):
+        # sleep(random.sample([t for t in range(3)],1)) 
+        delaytime = random.uniform(0,3)
+        sleep(delaytime)
+        print('delaytime:{}'.format(delaytime))
+        return func(*args,**kw)
+    return wrapper
+    
+
+class BcyDownLoader():
     """
     Collection the pictures from bcy.net
     There are optional methods for download pics.
@@ -33,7 +55,7 @@ class BCY_DownLoader(obejct):
 
     """
 
-    def __init__(self, **info):
+    def __init__(self):
         """
         [initial]
         param:
@@ -90,10 +112,10 @@ class BCY_DownLoader(obejct):
         """
         self.uid = uid
     @log
-    def get_content(self, **url):
+    def get_content(self, url):
         """
         params:
-            *url:
+            url:
         return:
             html source code of Bs4.
         return article_list according to methods.
@@ -162,6 +184,7 @@ class BCY_DownLoader(obejct):
                     pages_list.append(
                         urljoin(self.bcyurl, '{0}?&p={1}'.format(self.url_join, page_num)))
         return pages_list
+
     @log
     def detail_list(self, content):
         """
@@ -181,31 +204,35 @@ class BCY_DownLoader(obejct):
                 tag.li.a.attrs['title']: tag.li.a.attrs['href']
             }
     @log
-    def parse_detail(self, *detail_page,**detail):
+    def parse_detail(self, detail_page=None,**detail):
         """    
         params:
             detail_page:pages of pics with articles
             **detail:{'dn'='6488041845753405198'}
         """
-        import json
-        # 直接输入page=完整连接，或者href相对连接自动拼接
-        img_list = []
         if len(detail) > 0:
-            detail_page = urljoin(self.detailurl, detail['dn']))
-        elif isinstance(detail_page,list): 
+            detail_page = urljoin(self.detailurl, detail['dn'])
+        elif len(detail) == 0 and isinstance(detail_page,list): 
             for de_page in detail_page:
                 self.parse_detail(de_page)
         elif isinstance(detail_page,str):
-            detail_page = urljoin(self.bcyurl, self.detailurl))
+            detail_page = urljoin(self.bcyurl, self.detailurl)
         else:
             print('Correct detail page have not been input.')
-        detail_num = re.search('detail/(.*)?',detail_page).groups()[0]
+        print("parse page:{}".format(detail_page)) 
+        if detail:
+            detail_num = detail['dn']
+        else:
+            # detail_num = re.search('detail/(.*)?',detail_page).groups()[0]
+            detail_num = detail_page.split('/')[-1]
+
         rgd = requests.get(detail_page, headers=self.headers)
         rgd.encoding = 'utf-8'
         soupd = BeautifulSoup(rgd.text, 'lxml')
         """
         Parse the info from Html.
         """
+        import json
         json_img = soupd.find_all(
             name='script', text=re.compile('JSON.parse(.*);(.*)'))
         json_img = re.findall('JSON.parse\("(.*)"\);', str(json_img))
@@ -217,9 +244,11 @@ class BCY_DownLoader(obejct):
         """
         Save imgs.
         """
-        for img_l in jd_multi:
-            img_l['path'].rstrip('/w650')
-            img_list.append(img_l)
+        img_list = []
+        # print('jd_multi',jd_multi)
+        for img_l in jd_multi:  
+            img_list.append(img_l['path'].rstrip('/w650'))
+        # print('img_list',img_list)
         self.save_img(img_list,ppath=jd_uname,cpath=detail_num)
         return None
 
@@ -230,8 +259,7 @@ class BCY_DownLoader(obejct):
                 imgurl: img path ，Compatibility of list and str.
                 **path: {'ppath':'','cpath':''}
         """
-        import os
-        from urllib.request import urlretrieve
+        
         rpath = os.getcwd()
         try:
             if len(path) == 2 :
@@ -242,9 +270,9 @@ class BCY_DownLoader(obejct):
         except NameError:
             print("There isn't any path dict like {'ppath':'','cpath':''} or {'path':},\n tmppath is set as label of today")
             cpath == str(dt.today().date())
-        if not os.path.exists(path['cpath']):
+        if not os.path.exists(cpath):
             os.makedirs(cpath)
-            print(path['cpath'],'Directory created successfully')
+            print(cpath,'Directory created successfully')
         else:
             print('Directory is exist.')
 
@@ -253,12 +281,12 @@ class BCY_DownLoader(obejct):
         if isinstance(imgurl,list):
             for pic in imgurl:
                 try:
-                    self.download(pic)
+                    self.download(pic,filename=pic.split('/')[-1])
                 except ValueError:
                     print('{} is not a valid path'.format(pic))
         elif isinstance(imgurl,str):
-             try:
-                self.download(imgurl)
+            try:
+                self.download(imgurl,filename=imgurl.split('/')[-1])
             except ValueError:
                 print('{} is not a valid path'.format(imgurl))
         else:
@@ -268,28 +296,17 @@ class BCY_DownLoader(obejct):
         return None
 
     @delay
-    def download(self,inputs):
-        urlretrieve(inputs)
+    def download(self,inputs,filename=os.getcwd()):
+        print('download {}'.format(inputs))
+        try:
+            urlretrieve(inputs,filename=filename)
+        except exist:#不下载重复文件
+            pass
 
-    def log(text=None):
-        @functools.wraps(func)
-        def wrapper(*args,**kw):
-            print("{}:Call {}".format(dt.now(),func.__name__))
-            return func(*args,**kw)
-        return wrapper
-
-        
-    def delay():
-        """
-        random time for sleep as decorator
-        """
-        # sleep(random.sample([t for t in range(3)],1)) 
-        sleep(random.uniform(0,3)))
-
-    def usage():
+    def usage(self):
         """
         #step1:
-        bcy=BCY_DownLoader() #设置类实例
+        bcy=BcyDownLoader() #设置类实例
         #step2:
         bcy.set_uid(605084)  #设置用户ID
         #step3:
@@ -312,16 +329,19 @@ class BCY_DownLoader(obejct):
         #step10:
         #装饰器设置各种随机sleep时间
         #step11:
-        使用装饰器或者logging记录日志
+        装饰器或者logging记录日志
+        #step12:
+        进度条显示：图片大小tqdm
         """
 
 
 def main():
-    bcy = BCY_DownLoader()
+    bcy = BcyDownLoader()
     bcy.set_uid(605084)
     url = bcy.Method_Selector(1)
-    like_content = bcy.get_content(url)
-    page_range(like_content)
+    # like_content = bcy.get_content(url)
+    # pagerange = bcy.page_range(like_content)
+    bcy.parse_detail(dn='6578730940602777859')
 
 
 if __name__ == '__main__':
