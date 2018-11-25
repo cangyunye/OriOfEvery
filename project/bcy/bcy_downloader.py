@@ -6,12 +6,12 @@ from urllib.parse import urlencode
 from urllib.parse import urljoin
 from datetime import datetime
 from requests import codes
-import os
+
 # from hashlib import md5
 # from multiprocessing.pool import Pool
 from bs4 import BeautifulSoup
 import re
-import json
+
 
 __version__bcy__ = '1.0.0'
 
@@ -40,6 +40,7 @@ class BCY_DownLoader(obejct):
             headers:for requests incase of prevented by bcy.net.
         """
         self.bcyurl = 'https://bcy.net/'
+        self.detailurl = 'https://bcy.net/item/detail/'
         self.headers = {
             'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36'
         }
@@ -86,7 +87,7 @@ class BCY_DownLoader(obejct):
         """
         self.uid = uid
 
-    def get_content(self, *url):
+    def get_content(self, **url):
         """
         params:
             *url:
@@ -178,69 +179,95 @@ class BCY_DownLoader(obejct):
                 tag.li.a.attrs['title']: tag.li.a.attrs['href']
             }
 
-    def parse_detail(self, **detail_page):
+    def parse_detail(self, *detail_page,**detail):
         """    
         params:
-            **detail_page:pages of pics with articles
-        return:
-            article_json
-            jd_uid: userid
-            detail_num: article page
-            img_list:img in article
+            detail_page:pages of pics with articles
+            **detail:{'dn'='6488041845753405198'}
         """
+        import json
         # 直接输入page=完整连接，或者href相对连接自动拼接
         img_list = []
-        if isinstance(detail_page,list): 
+        if len(detail) > 0:
+            detail_page = urljoin(self.detailurl, detail['dn']))
+        elif isinstance(detail_page,list): 
             for de_page in detail_page:
-                self.parse_detail(de_page) #虽然是自己调用，但是return需要处理下
+                self.parse_detail(de_page)
         elif isinstance(detail_page,str):
-            detail_page = 'https://bcy.net/item/detail/6488041845753405198'
+            detail_page = urljoin(self.bcyurl, self.detailurl))
+        else:
+            print('Correct detail page have not been input.')
         detail_num = re.search('detail/(.*)?',detail_page).groups()[0]
         rgd = requests.get(detail_page, headers=self.headers)
         rgd.encoding = 'utf-8'
         soupd = BeautifulSoup(rgd.text, 'lxml')
         """
-        soupd.article.find_all(attrs={'class':'img-wrap-inner'})
-        soupd.article.find_all(attrs={'class':'content'})
-        soupd.article.find_all(attrs={'class':'album'})
+        Parse the info from Html.
         """
         json_img = soupd.find_all(
             name='script', text=re.compile('JSON.parse(.*);(.*)'))
         json_img = re.findall('JSON.parse\("(.*)"\);', str(json_img))
         str_j = eval("'{}'".format(json_img[0]))
         jd = json.loads(str_j)
-
         jd_multi = jd['detail']['post_data']['multi'] 
-
         jd_uid = jd['detail']['detail_user']['uid']
         jd_uname = jd['detail']['detail_user']['uname']
-        # 从字典jd里面获取内容
+        """
+        Save imgs.
+        """
         for img_l in jd_multi:
             img_l['path'].rstrip('/w650')
             img_list.append(img_l)
-        return {jd_uid+jd_uname:{detail_num:img_list}}
+        self.save_img(img_list,ppath=jd_uname,cpath=detail_num)
 
-    def save_img(self, article_json):
+    def save_img(self, imgurl,**path):
+        """ 
+            params：
+                imgurl: img path ，Compatibility of list and str.
+                **path: {'ppath':'','cpath':''}
         """
-        Get from article_json for download.
-        params：
-            article_json
-            {
-                uid:{
-                    detail_num:[img_list]
-                }
-            }
-            detail_num: classify images by uid_dir 
-            img_list: list of imgs in article.
-        """
-        from urllib.requests import urlretrieve
-        dirname = article_json[] #先从字典获取uid+uname凭借
-        os.makedirs(dirname, exist_ok=True)
-        pathlist
-        urlretrieve(
-            'https://img-bcy-qn.pstatp.com/coser/58850/post/c0c4p/84d31100c88511e7b1be05ee2d688961.jpg', '1.jpg')
+        import os
+        from urllib.request import urlretrieve
+        rpath = os.getcwd()
+        try:
+            if len(path) == 2 :
+                ppath = os.path.join(rpath,path['ppath'])
+                cpath = os.path.join(ppath,path['cpath'])
+            elif len(path) == 1:
+                cpath = os.path.join(rpath,path['path'])
+        except NameError:
+            print("There isn't any path dict like {'ppath':'','cpath':''} or {'path':},\n tmppath is set as label of today")
+            cpath == str(datetime.datetime.today().date())
+        if not os.path.exists(path['cpath']):
+            os.makedirs(cpath)
+            print(path['cpath'],'Directory created successfully')
+        else:
+            print('Directory is exist.')
+
+        os.chdir(cpath) 
+
+        if isinstance(imgurl,list):
+            for pic in imgurl:
+                try:
+                    urlretrieve(pic)
+                except ValueError:
+                    print('{} is not a valid path'.format(pic))
+        elif isinstance(imgurl,str):
+             try:
+                urlretrieve(imgurl)
+            except ValueError:
+                print('{} is not a valid path'.format(imgurl))
+        else:
+            print('{} is not exist or the value is wrong'.format(imgurl))
+        
+        os.chdir(rpath) #以防意外，先留下
 
     def log():
+        pass
+    def delay():
+        """
+        random time for sleep as decorator
+        """
         pass
 
     def usage():
