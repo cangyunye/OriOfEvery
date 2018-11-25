@@ -72,7 +72,7 @@ class BcyDownLoader():
         }
   
     @log
-    def Method_Selector(self, Method=1):
+    def Method_Selector(self, Method=1,*prange):
         """
         params:
             Methods:
@@ -93,7 +93,7 @@ class BcyDownLoader():
             self.url_join = '/u/{0}/like'.format(self.uid)
             self.url = urljoin(self.bcyurl, self.url_join)
             likepg = self.get_content(self.url) #获取"like"页html代码
-            likepg_list = self.page_range(likepg,1,2) #分析并输出选择的"like"页码范围
+            likepg_list = self.page_range(likepg,prange[0],prange[1]) #分析并输出选择的"like"页码范围
             for page in likepg_list:
                 #获取like"页html代码
                 like = self.get_content(page) 
@@ -128,28 +128,10 @@ class BcyDownLoader():
     def get_content(self, url):
         """
         params:
-            url:
+            url
         return:
-            html source code of Bs4.
-        return article_list according to methods.
-        if instance(url,list) :
-            for i in url:
-                rg=requests.get(i,headers=self.headers)
-                yield rg.text #######
-        content=self.get_content(url)
-        self.detail_list(content)
+            html source code.
         """
-        # if isinstance(url, list):
-        #     try:
-        #         for i in url:
-        #             rg = requests.get(i, headers=self.headers)
-        #             if rg.status_code == codes.ok:
-        #                 rg.encoding = 'utf-8'
-        #                 return rg.text
-        #     except requests.ConnectionError:
-        #         return None
-        # elif self.Method:
-        #   url = self.url
         try:
             rg = requests.get(url, headers=self.headers)
             if rg.status_code == codes.ok:
@@ -236,7 +218,7 @@ class BcyDownLoader():
         elif isinstance(detail_page,str):
             pass
         else :
-            raise ValueError,'Correct detail page have not been input.'
+            raise ValueError('Correct detail page have not been input.')
         
         print("parsing page:{}".format(detail_page)) 
         if detail:
@@ -355,12 +337,17 @@ class BcyDownLoader():
 
 
 def main():
+    """
+    #指定用户的喜欢页批量下载
     bcy = BcyDownLoader()
     bcy.set_uid(605084)
-    url = bcy.Method_Selector(1)
+    url = bcy.Method_Selector(1,25,26) #下载第25到第26页
     """
+
+    """
+    #指定detail下载，可单独使用
     bcy = BcyDownLoader()
-    bcy.parse_detail(dn='6578730940602777859') #指定detail下载，可单独使用
+    bcy.parse_detail(dn='6578730940602777859') 
     """
 
 if __name__ == '__main__':
