@@ -4,14 +4,15 @@
 import requests
 from urllib.parse import urlencode
 from urllib.parse import urljoin
-from datetime import datetime
 from requests import codes
-
 # from hashlib import md5
 # from multiprocessing.pool import Pool
 from bs4 import BeautifulSoup
 import re
-
+import random
+from datetime import datetim as dt
+from time import sleep
+import functools
 
 __version__bcy__ = '1.0.0'
 
@@ -32,19 +33,22 @@ class BCY_DownLoader(obejct):
 
     """
 
-    def __init__(self, **info):
+    def __init__(self,batch=10, **info):
         """
         [initial]
         param:
-            bcyurl:base website_url for urljoin.
+            bcyurl:base url of banciyuan.
+            detailurl:basesite of detail article
             headers:for requests incase of prevented by bcy.net.
+            batch:count of download every time.
         """
         self.bcyurl = 'https://bcy.net/'
         self.detailurl = 'https://bcy.net/item/detail/'
         self.headers = {
             'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36'
         }
-
+        self.batch = batch
+    @log
     def Method_Selector(self, Method=1):
         """
         params:
@@ -60,8 +64,7 @@ class BCY_DownLoader(obejct):
             self.url
         """
         self.Method = Method
-        if not self.set_uid:
-            import random
+        if not self.set_uid: 
             self.set_uid(int(random.random()*2000000))
         if self.Method == 1:
             self.url_join = '/u/{0}/like'.format(self.uid)
@@ -79,14 +82,14 @@ class BCY_DownLoader(obejct):
             print("Check the Method Please!")
         self.url = urljoin(self.bcyurl, self.url_join)
         return self.url
-
+    @log
     def set_uid(self, uid):
         """
         param: 
             uid: the user_id of bcy.net
         """
         self.uid = uid
-
+    @log
     def get_content(self, **url):
         """
         params:
@@ -119,8 +122,8 @@ class BCY_DownLoader(obejct):
                     return rg.text
             except requests.ConnectionError:
                 return None
-
-    def get_pages_range(self, content, **pages):
+    @log
+    def page_range(self, content, **pages):
         """
         before implement func detail_list,
         we can set the range of page we need to process,
@@ -159,7 +162,7 @@ class BCY_DownLoader(obejct):
                     pages_list.append(
                         urljoin(self.bcyurl, '{0}?&p={1}'.format(self.url_join, page_num)))
         return pages_list
-
+    @log
     def detail_list(self, content):
         """
         Generate detail_article_list 
@@ -169,7 +172,6 @@ class BCY_DownLoader(obejct):
             dict['title']=href
         """
         soup = BeautifulSoup(content, 'lxml')
-        # 可以格式化或不格式化，没影响
         soup.prettify()
         # Bs_list形式存储所有找到的图文href
         # like_tags=soup.find_all(name='ul',attrs={'class':'l-clearfix gridList smallCards'})
@@ -178,7 +180,7 @@ class BCY_DownLoader(obejct):
             yield {
                 tag.li.a.attrs['title']: tag.li.a.attrs['href']
             }
-
+    @log
     def parse_detail(self, *detail_page,**detail):
         """    
         params:
@@ -219,7 +221,9 @@ class BCY_DownLoader(obejct):
             img_l['path'].rstrip('/w650')
             img_list.append(img_l)
         self.save_img(img_list,ppath=jd_uname,cpath=detail_num)
+        return None
 
+    @log
     def save_img(self, imgurl,**path):
         """ 
             params：
@@ -237,7 +241,7 @@ class BCY_DownLoader(obejct):
                 cpath = os.path.join(rpath,path['path'])
         except NameError:
             print("There isn't any path dict like {'ppath':'','cpath':''} or {'path':},\n tmppath is set as label of today")
-            cpath == str(datetime.datetime.today().date())
+            cpath == str(dt.today().date())
         if not os.path.exists(path['cpath']):
             os.makedirs(cpath)
             print(path['cpath'],'Directory created successfully')
@@ -249,26 +253,38 @@ class BCY_DownLoader(obejct):
         if isinstance(imgurl,list):
             for pic in imgurl:
                 try:
-                    urlretrieve(pic)
+                    self.download(pic)
                 except ValueError:
                     print('{} is not a valid path'.format(pic))
         elif isinstance(imgurl,str):
              try:
-                urlretrieve(imgurl)
+                self.download(imgurl)
             except ValueError:
                 print('{} is not a valid path'.format(imgurl))
         else:
             print('{} is not exist or the value is wrong'.format(imgurl))
         
         os.chdir(rpath) #以防意外，先留下
+        return None
 
-    def log():
-        pass
+    @delay
+    def download(self,inputs):
+        urlretrieve(inputs)
+        
+    def log(text=None):
+        @functools.wraps(func)
+        def wrapper(*args,**kw):
+            print("{}:Call {}".format(dt.now(),func.__name__))
+            return func(*args,**kw)
+        return wrapper
+
+        
     def delay():
         """
         random time for sleep as decorator
         """
-        pass
+        # sleep(random.sample([t for t in range(3)],1)) 
+        sleep(random.uniform(0,3)))
 
     def usage():
         """
@@ -281,7 +297,7 @@ class BCY_DownLoader(obejct):
         #step4: ignore this param_url if exists step3 
         like_content=bcy.get_content(url) #获取页面所有预览页html代码,这里不应该为显性的函数,url为内部定义
         #step5:
-        page_list=bcy.get_pages_range(like_content,begin=1,end=2) #分析"喜欢"页面html代码，返回所有的图文地址页
+        page_list=bcy.page_range(like_content,begin=1,end=2) #分析"喜欢"页面html代码，返回所有的图文地址页
         #step6:
         all_content=bcy.get_content(page_list) #对所有图文地址页返回html代码
         #step7:
@@ -305,7 +321,7 @@ def main():
     bcy.set_uid(605084)
     url = bcy.Method_Selector(1)
     like_content = bcy.get_content(url)
-    get_pages_range(like_content)
+    page_range(like_content)
 
 
 if __name__ == '__main__':
