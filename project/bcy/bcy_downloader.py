@@ -16,6 +16,7 @@ import random
 from datetime import datetime as dt
 from time import sleep
 import functools
+from tqdm import tqdm
 # import types
 
 __version__bcy__ = '1.0.0'
@@ -297,15 +298,22 @@ class BcyDownLoader():
         return None
 
     @delay
-    def download(self,inputs,filename=os.getcwd()):
+    def download(self,inputs,filename):
         print('Download {}'.format(inputs))
+        if os.path.exists(filename):
+            print('{} is exist.'.format(filename))
+            return None
         try:
             urlretrieve(inputs,filename=filename)
             print('success.')
         except ContentTooShortError:
             print('Download failed!Retry at 5 sec later')
             sleep(5)
-            urlretrieve(inputs,filename=filename)
+            try:
+                urlretrieve(inputs,filename=filename)
+                print('success.')
+            except ContentTooShortError:
+                return None
         
     def usage(self):
         """
@@ -340,12 +348,12 @@ class BcyDownLoader():
 
 
 def main():
-    """
+    
     #指定用户的喜欢页批量下载
     bcy = BcyDownLoader()
     bcy.set_uid(605084)
-    url = bcy.Method_Selector(1,25,26) #下载第25到第26页
-    """
+    url = bcy.Method_Selector(1,20,27) #下载第25到第26页
+    
 
     """
     #指定detail下载，可单独使用
