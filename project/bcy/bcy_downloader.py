@@ -5,6 +5,7 @@ import requests
 from urllib.parse import urlencode
 from urllib.parse import urljoin
 from urllib.request import urlretrieve
+from urllib.error import ContentTooShortError
 from requests import codes
 # from hashlib import md5
 # from multiprocessing.pool import Pool
@@ -208,7 +209,6 @@ class BcyDownLoader():
 
         """
         if len(detail) > 0:
-            print('11')
             for dn in detail.values():
                 detail_page = urljoin(self.detailurl, dn)
         elif isinstance(detail_page,list): 
@@ -298,12 +298,15 @@ class BcyDownLoader():
 
     @delay
     def download(self,inputs,filename=os.getcwd()):
-        print('download {}'.format(inputs))
+        print('Download {}'.format(inputs))
         try:
             urlretrieve(inputs,filename=filename)
-        except exist:#不下载重复文件
-            pass
-
+            print('success.')
+        except ContentTooShortError:
+            print('Download failed!Retry at 5 sec later')
+            sleep(5)
+            urlretrieve(inputs,filename=filename)
+        
     def usage(self):
         """
         #step1:
