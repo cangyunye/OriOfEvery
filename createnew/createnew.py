@@ -29,6 +29,7 @@
     soup.text()提取标签中的值
 """
 import requests
+import urllib.request
 from bs4 import BeautifulSoup
 def get_xinwen():
     """
@@ -78,3 +79,6 @@ def main():
 
 if __name__ == '__main__':
     main()
+
+
+

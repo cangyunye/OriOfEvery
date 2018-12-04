@@ -15,6 +15,7 @@ import os
 import random
 from datetime import datetime as dt
 from time import sleep
+from time import perf_counter
 import functools
 from tqdm import tqdm
 # import types
@@ -28,6 +29,7 @@ __bibtex__ = r"""@Article{cangyunye:2018,
   publisher = {cangyunye},
   year      = 2018
 }"""
+#改造log可以添加信息级别的参数如log('ERROR'),可指定text，如果Text存在，print,否则不输出,需要钩子操作
 
 def log(func):
     @functools.wraps(func)
@@ -41,6 +43,7 @@ def delay(func):
     """
     random time for sleep as decorator
     """
+    @functools.wraps(func)
     def wrapper(*args,**kw):
         # sleep(random.sample([t for t in range(3)],1)) 
         delaytime = random.uniform(0,3)
@@ -49,6 +52,19 @@ def delay(func):
         return func(*args,**kw)
     return wrapper
     
+def timefunc(func):
+    """
+    Count the func running time.
+    """
+    @functools.wraps(func)
+    def wrapper(*args,**kw):
+        start = perf_counter()
+        r = func(*args,**kw)
+        end = perf_counter()
+        print('{}.{} : {}'.format(func.__module__, func.__name__, end - start))
+        return r
+    return wrapper
+
 
 class BcyDownLoader():
     """
@@ -98,6 +114,7 @@ class BcyDownLoader():
             likepg_list = self.page_range(likepg,prange[0],prange[1]) #分析并输出选择的"like"页码范围
             for page in likepg_list:
                 #获取like"页html代码
+                print('Current Like page:{}'.format(page))
                 like = self.get_content(page) 
                 # print('like',like)
                 #提取当前"like"页所有detail页码
@@ -221,7 +238,7 @@ class BcyDownLoader():
         else :
             raise ValueError('Correct detail page have not been input.')
         
-        print("parsing page:{}".format(detail_page)) 
+        print("parsing page:{}".format(detail_page))  #这里需要为单个页面不能为多个页面内列表
         if detail:
             detail_num = detail['dn']
         else:
@@ -352,7 +369,7 @@ def main():
     #指定用户的喜欢页批量下载
     bcy = BcyDownLoader()
     bcy.set_uid(605084)
-    url = bcy.Method_Selector(1,20,27) #下载第25到第26页
+    url = bcy.Method_Selector(1,1,27) #下载第25到第26页
     
 
     """
