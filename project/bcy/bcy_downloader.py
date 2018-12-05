@@ -115,11 +115,11 @@ class BcyDownLoader():
             for page in likepg_list:
                 #获取like"页html代码
                 print('Current Like page:{}'.format(page))
-                like = self.get_content(page) 
+                like = self.get_content(page)
                 # print('like',like)
                 #提取当前"like"页所有detail页码
                 likedt_list = self.detail_list(like)
-                # print('likedt_list',likedt_list)
+                print('likedt_list',likedt_list)
                 #下载所有detail页内图片
                 self.parse_detail(likedt_list)
         elif self.Method == 2:
@@ -219,7 +219,7 @@ class BcyDownLoader():
 
     @log
     def parse_detail(self, detail_page=None,**detail):
-        """    
+        """
         params:
             detail_page:pages of pics with articles
             **detail:{'dn':'6488041845753405198'}
@@ -229,21 +229,20 @@ class BcyDownLoader():
         if len(detail) > 0:
             for dn in detail.values():
                 detail_page = urljoin(self.detailurl, dn)
+            self.parse_detail(detail_page)
         elif isinstance(detail_page,list): 
             for de_page in detail_page:
-                print('de_page',de_page)
-                self.parse_detail(de_page)
+                print('Detail Page:',de_page)
+                self.get_jnfo(de_page)
         elif isinstance(detail_page,str):
-            pass
+            print('Single page',detail_page)
+            self.get_jnfo(detail_page)
         else :
             raise ValueError('Correct detail page have not been input.')
-        
-        print("parsing page:{}".format(detail_page))  #这里需要为单个页面不能为多个页面内列表
-        if detail:
-            detail_num = detail['dn']
-        else:
-            # detail_num = re.search('detail/(.*)?',detail_page).groups()[0]
-            detail_num = detail_page.split('/')[-1]
+	@log
+    def get_jnfo(self,detail_page):
+        # detail_num = re.search('detail/(.*)?',detail_page).groups()[0]
+        detail_num = detail_page.split('/')[-1]
 
         rgd = requests.get(detail_page, headers=self.headers)
         rgd.encoding = 'utf-8'
@@ -288,7 +287,7 @@ class BcyDownLoader():
                 cpath = os.path.join(rpath,path['path'])
         except NameError:
             print("There isn't any path dict like {'ppath':'','cpath':''} or {'path':},\n tmppath is set as label of today")
-            cpath == str(dt.today().date())
+            cpath = str(dt.today().date())
         if not os.path.exists(cpath):
             os.makedirs(cpath)
             print(cpath,'Directory created successfully')
@@ -331,7 +330,7 @@ class BcyDownLoader():
                 print('success.')
             except ContentTooShortError:
                 return None
-        
+
     def usage(self):
         """
         #step1:
@@ -369,7 +368,7 @@ def main():
     #指定用户的喜欢页批量下载
     bcy = BcyDownLoader()
     bcy.set_uid(605084)
-    url = bcy.Method_Selector(1,1,27) #下载第25到第26页
+    url = bcy.Method_Selector(1,1,2) #下载第25到第26页
     
 
     """
