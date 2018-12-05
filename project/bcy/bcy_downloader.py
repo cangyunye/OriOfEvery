@@ -101,6 +101,8 @@ class BcyDownLoader():
 			4: Get the videos.
 			5: Get the novels.
 			6: Get "comment" from an articlec
+			*prange:tuple of begin page to end page
+			e.g. (1,32)
 		return:
 			self.url
 		"""
@@ -186,7 +188,6 @@ class BcyDownLoader():
 
 	@log
 	def tailpage(self,content) :
-		#判断尾页
 		soup = BeautifulSoup(content, 'lxml')
 		end_page = soup.find(
 			name='li', attrs={'class': 'pager__item js-nologinLink'}, text='尾页')
@@ -213,8 +214,6 @@ class BcyDownLoader():
 		detail_list = []
 		for tag in like_tags:
 			detail_list.append(urljoin(self.bcyurl, tag.attrs['href']))
-		# print('detail_list\n',detail_list)
-		# print(type(detail_list))
 		return detail_list
 
 	@log
@@ -233,10 +232,12 @@ class BcyDownLoader():
 		elif isinstance(detail_page,list):
 			for de_page in detail_page:
 				print('Detail Page:',de_page)
-				self.get_jnfo(de_page)
+				# self.get_jnfo(de_page)
+				self.process_savedown(de_page)
 		elif isinstance(detail_page,str):
 			print('Single page',detail_page)
-			self.get_jnfo(detail_page)
+			# self.get_jnfo(detail_page)
+			self.process_savedown(detail_page)
 		else :
 			raise ValueError('Correct detail page have not been input.')
 
@@ -260,15 +261,13 @@ class BcyDownLoader():
 		jd_uid = jd['detail']['detail_user']['uid']
 		jd_uname = jd['detail']['detail_user']['uname']
 		"""
-		Save imgs.
+		Images list
 		"""
 		img_list = []
-		# print('jd_multi',jd_multi)
 		for img_l in jd_multi:
 			img_list.append(img_l['path'].rstrip('/w650'))
-		# print('img_list',img_list)
-		self.save_img(img_list,ppath=jd_uname,cpath=detail_num)
-		return None
+		# self.save_img(img_list,ppath=jd_uname,cpath=detail_num)
+		return [img_list,jd_uname,detail_num]
 
 	@log
 	def save_img(self, imgurl,**path):
@@ -330,12 +329,14 @@ class BcyDownLoader():
 				print('success.')
 			except ContentTooShortError:
 				return None
-	def process(self):
+
+	def process_savedown(self,de_page):
 		"""
 		Save and DownLoad
-
-		:return:
 		"""
+		l_info = self.get_jnfo(de_page)
+		self.save_img(l_info[0], ppath=l_info[1], cpath=l_info[2])
+
 	def usage(self):
 		"""
 		#step1:
@@ -373,7 +374,7 @@ def main():
 	#指定用户的喜欢页批量下载
 	bcy = BcyDownLoader()
 	bcy.set_uid(605084)
-	url = bcy.Method_Selector(1,1,2) #下载第25到第26页
+	url = bcy.Method_Selector(1,1,25) #下载第25到第26页
 
 
 	"""
