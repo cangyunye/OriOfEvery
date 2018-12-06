@@ -115,14 +115,10 @@ class BcyDownLoader():
 			likepg = self.get_content(self.url) #获取"like"页html代码
 			likepg_list = self.page_range(likepg,prange[0],prange[1]) #分析并输出选择的"like"页码范围
 			for page in likepg_list:
-				#获取like"页html代码
 				print('Current Like page:{}'.format(page))
 				like = self.get_content(page)
-				# print('like',like)
-				#提取当前"like"页所有detail页码
 				likedt_list = self.detail_list(like)
 				print('likedt_list',likedt_list)
-				#下载所有detail页内图片
 				self.parse_detail(likedt_list)
 		elif self.Method == 2:
 			self.url_join = '/u/{0}/like/circle'.format(self.uid)
@@ -187,7 +183,11 @@ class BcyDownLoader():
 		return pages_list
 
 	@log
-	def tailpage(self,content) :
+	def tailpage(self,content,select=0) :
+		"""
+		:param content:
+		:return:end pagenum
+		"""
 		soup = BeautifulSoup(content, 'lxml')
 		end_page = soup.find(
 			name='li', attrs={'class': 'pager__item js-nologinLink'}, text='尾页')
@@ -197,7 +197,11 @@ class BcyDownLoader():
 			end_page = end_page.groups()[0]
 		else:
 			end_page = 1
-		return end_page
+		if select==0:
+			return end_page
+		else:
+			articlecount = soup.select_one('#content-box > div > ul > li > span ').string
+			return [articlecount,end_page]
 
 	@log
 	def detail_list(self, content):
@@ -243,6 +247,10 @@ class BcyDownLoader():
 
 	@log
 	def get_jnfo(self,detail_page):
+		"""
+		:param detail_page:
+		:return: json from detail_page
+		"""
 		# detail_num = re.search('detail/(.*)?',detail_page).groups()[0]
 		detail_num = detail_page.split('/')[-1]
 
@@ -314,6 +322,11 @@ class BcyDownLoader():
 
 	@delay
 	def download(self,inputs,filename):
+		"""
+		:param inputs: url for download
+		:param filename: saved in the local
+		:return:
+		"""
 		print('Download {}'.format(inputs))
 		if os.path.exists(filename):
 			print('{} is exist.'.format(filename))
@@ -336,6 +349,14 @@ class BcyDownLoader():
 		"""
 		l_info = self.get_jnfo(de_page)
 		self.save_img(l_info[0], ppath=l_info[1], cpath=l_info[2])
+	def process_liketail(self,uid):
+		"""
+		:param uid:
+		:return:
+		"""
+		url_join = '/u/{0}/like'.format(uid)
+		url = urljoin(self.bcyurl, url_join)
+		return self.tailpage(self.get_content(url),1)
 
 	def usage(self):
 		"""
@@ -355,7 +376,6 @@ class BcyDownLoader():
 		detail_list_all = parse_detail(all_content) #遍历所有页面，获取coser 的uid和图片列表
 		for detail in all_content:
 			detail_list_all.append(detail_list(detail))
-		可能得改下思路，每次处理一个页面之后再用重复的流程处理下一个
 		#step8:
 		#根据coser的uid建目录
 		#step9:
@@ -370,18 +390,21 @@ class BcyDownLoader():
 
 
 def main():
-
+	"""
 	#指定用户的喜欢页批量下载
 	bcy = BcyDownLoader()
 	bcy.set_uid(605084)
-	url = bcy.Method_Selector(1,1,25) #下载第25到第26页
-
+	url = bcy.Method_Selector(1,1,25)
+	"""
 
 	"""
 	#指定detail下载，可单独使用
 	bcy = BcyDownLoader()
 	bcy.parse_detail(dn='6578730940602777859') 
 	"""
+	bcy = BcyDownLoader()
+	print(bcy.process_liketail(605084))
+
 
 if __name__ == '__main__':
 	main()
