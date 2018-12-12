@@ -14,6 +14,8 @@ import functools
 import random
 from time import sleep
 
+from tqdm import tqdm
+
 def delay(func):
 	"""
 	random time for sleep as decorator
@@ -21,7 +23,7 @@ def delay(func):
 	@functools.wraps(func)
 	def wrapper(*args,**kw):
 		# sleep(random.sample([t for t in range(3)],1))
-		delaytime = random.uniform(3,6)
+		delaytime = random.uniform(1,3)
 		sleep(delaytime)
 		print('delaytime:{}'.format(delaytime))
 		return func(*args,**kw)
@@ -56,7 +58,6 @@ class Crawler(object):
 
 
 	@staticmethod
-	@delay
 	def request(url):
 		"""
 		网络请求，返回response对象
@@ -90,13 +91,30 @@ class Crawler(object):
 		}
 
 		#代理池https://www.kuaidaili.com/free/
-		# proxyip = ['47.94.104.204:8118','124.206.133.227:80']
-		# proxies = {'http':str(random.choice(proxyip))}
-
-		response = requests.get(url,headers=headers)
+		proxyipinfo = """103.21.116.85	3128	透明	HTTP	中国 江苏省 无锡市	1秒	2018-12-11 22:30:47
+183.195.145.174	53281	透明	HTTP	中国 上海市 上海市 移动	3秒	2018-12-11 21:30:51
+123.139.56.238	9999	透明	HTTP	中国 陕西省 西安市 联通	3秒	2018-12-11 20:30:20
+111.11.98.58	9000	透明	HTTP	中国 河北省 邢台市 移动	1秒	2018-12-11 19:30:49
+222.132.145.122	53281	透明	HTTP	中国 山东省 泰安市 联通	1秒	2018-12-11 18:30:08
+58.17.125.215	53281	透明	HTTP	中国 江西省 九江市 联通	1秒	2018-12-11 17:30:59
+124.207.82.166	8008	透明	HTTP	北京市 鹏博士宽带	1秒	2018-12-11 16:30:45
+218.28.58.150	53281	透明	HTTP	中国 河南省 焦作市 联通	1秒	2018-12-11 15:30:41
+222.221.11.119	3128	透明	HTTP	中国 云南 昆明 电信	3秒	2018-12-11 14:29:31
+123.139.56.238	9999	透明	HTTP	中国 陕西省 西安市 联通	1秒	2018-12-11 13:30:56
+223.85.196.75	9797	透明	HTTP	中国 四川省 成都市 移动	3秒	2018-12-11 12:30:36
+123.139.56.238	9999	透明	HTTP	中国 陕西省 西安市 联通	1秒	2018-12-11 11:30:35
+124.207.82.166	8008	透明	HTTP	北京市 鹏博士宽带	3秒	2018-12-11 10:30:57
+222.217.19.248	8080	透明	HTTP	广西壮族自治区柳州市 电信	3秒	2018-12-11 09:30:23
+115.233.210.218	808	透明	HTTP	中国 浙江省 杭州市 电信	1秒	2018-12-11 08:30:56"""
+		proxyipinfo=[x.strip().split() for x in proxyipinfo.split('\n') if len(x)>0]
+		proxyiplist = [x[3].lower()+"://"+x[0]+":"+x[1] for x in proxyipinfo if x[0] != 'IP']
+		proxies = {'http':random.choice(proxyiplist)}
+		print("{0}\n{1}".format(headers.items(),proxies.items()))
+		response = requests.get(url,headers=headers,proxies=proxies)
+		# response = requests.get(url, headers=headers)
 		if response.status_code == 503:
 			slt=random.uniform(3,6)
-			print('遭遇反爬机制503，休息{}s'.format(slt))
+			print('遭遇反爬机制503，先冥思苦想{}s'.format(slt))
 			sleep(slt)
 			response = Crawler.request(url)
 		return response
@@ -139,18 +157,19 @@ class Crawler(object):
 		htmls = []
 
 		urls = [url for url in self.parse_menu(self.request(self.start_url))]
-
-		for index,url in enumerate(urls):
-			f_name = ".".join([str(index),"html"])
-			# 判断文件是否已存在，存在则continue跳过
-			if os.path.exists(f_name):
-				print("{}已经存在,处理下一页".format(f_name))
-				continue
-			html = self.parse_body(self.request(url))
-			with open(f_name,'wb') as f:
-				f.write(html)
-			htmls.append(f_name)
-			print("{}加载完成".format(f_name))
+		with tqdm(urls,total=len(urls)) as pbar:
+			for index,url in enumerate(urls):
+				f_name = ".".join([str(index),"html"])
+				# 判断文件是否已存在，存在则continue跳过
+				if os.path.exists(f_name):
+					print("{}已经存在,处理下一页".format(f_name))
+					continue
+				html = self.parse_body(self.request(url))
+				with open(f_name,'wb') as f:
+					f.write(html)
+				htmls.append(f_name)
+				# print("{}加载完成".format(f_name))
+				pbar.update(n=index+1)
 		pdfkit.from_file(htmls, self.name + ".pdf", options=options)
 		for html in htmls:
 			os.remove(html)
