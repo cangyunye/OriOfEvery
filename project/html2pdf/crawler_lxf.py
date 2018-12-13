@@ -163,13 +163,15 @@ class Crawler(object):
 				# 判断文件是否已存在，存在则continue跳过
 				if os.path.exists(f_name):
 					print("{}已经存在,处理下一页".format(f_name))
+					htmls.append(f_name)
+					pbar.update(n=1)
 					continue
 				html = self.parse_body(self.request(url))
 				with open(f_name,'wb') as f:
 					f.write(html)
 				htmls.append(f_name)
 				# print("{}加载完成".format(f_name))
-				pbar.update(n=index+1)
+				pbar.update(n=1)
 		pdfkit.from_file(htmls, self.name + ".pdf", options=options)
 		for html in htmls:
 			os.remove(html)
