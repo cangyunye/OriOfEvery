@@ -43,7 +43,7 @@ def get_html(url):
 
 
 
-def get_proxies(html):
+def getmipu_proxies(html):
 	#写入mysql的结构体
 	struct2mysql = []
 	# 组合成代理
@@ -51,30 +51,54 @@ def get_proxies(html):
 	# print(doc('table'))
 	ip = doc('tbody .tbl-proxy-ip').items()
 	port = doc('tbody .tbl-proxy-port img').items()
-	type = doc('tbody .tbl-proxy-type').items()
+	types = doc('tbody .tbl-proxy-type').items()
 	mipu_base = 'https://proxy.mimvp.com/'
 	for i in range(10):
 		# print("{}:{}|{}".format(ip.__next__().text(),urljoin(mipu_base,port.__next__().attr('src')),type.__next__().text()))
-		struct2mysql.append([ip.__next__().text(),urljoin(mipu_base,port.__next__().attr('src')),type.__next__().text()])
+		struct2mysql.append([ip.__next__().text(),urljoin(mipu_base,port.__next__().attr('src')),types.__next__().text()])
 	return struct2mysql
+
+def getkdl_proxies(html):
+	#写入mysql的结构体
+	struct2mysql = []
+	# 组合成代理
+	doc = pq(html)
+	for i in doc('tbody tr').items():
+		print(i('td').eq(0).text(),i('td').eq(1).text(),i('td').eq(3).text())
+		struct2mysql.append([i('td').eq(0).text(),i('td').eq(1).text(),i('td').eq(3).text()])
+	return struct2mysql
+
+
 
 def write_file(content):
 	# 写入保存
-	with open('proxies.csv','w+') as pr:
+	with open('proxies.csv','w') as pr:
 		for line in content:
 			print(line)
 			pr.writelines(line[0]+","+line[1]+","+line[2]+"\n")
 
 
 if __name__ == '__main__':
-	# 代理网址
+
 	mipukaifangdaili = 'https://proxy.mimvp.com/free.php'
 	mipu_base='https://proxy.mimvp.com/'
-	mipusmhttp = 'https://proxy.mimvp.com/freesecret.php?proxy=in_hp'
-	mipusmsocks = 'https://proxy.mimvp.com/freesecret.php?proxy=in_socks'
-	mipus=[mipusmhttp,mipusmsocks]
+	# mipusmhttp = 'https://proxy.mimvp.com/freesecret.php?proxy=in_hp'
+	# mipusmsocks = 'https://proxy.mimvp.com/freesecret.php?proxy=in_socks'
+	mipusmfreeputong = 'https://proxy.mimvp.com/freeopen.php?proxy=in_tp'
+	mipusmfreenimin = 'https://proxy.mimvp.com/freeopen.php?proxy=in_hp'
+	mipusmfreesocks = 'https://proxy.mimvp.com/freeopen.php?proxy=in_socks'
+	mipus=[mipusmfreeputong,mipusmfreenimin,mipusmfreesocks]
 	# 提取代理html
 	for url in mipus:
 		testhtml=get_html(url)
-		struct=get_proxies(testhtml)
+		struct=getmipu_proxies(testhtml)
+		write_file(struct)
+
+	kdlnimin='https://www.kuaidaili.com/free/inha/1/'
+	kdlpt='https://www.kuaidaili.com/free/intr/1/'
+	kdl=[kdlnimin,kdlpt]
+	# 提取代理html
+	for url in kdl:
+		testhtml=get_html(url)
+		struct=getkdl_proxies(testhtml)
 		write_file(struct)
