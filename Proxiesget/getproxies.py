@@ -5,9 +5,6 @@ from urllib.parse import urljoin
 from time import sleep
 
 
-
-
-
 def get_html(url):
 	#
 	try:
@@ -45,18 +42,17 @@ def get_html(url):
 
 
 
-
 def getmipu_proxies(html):
 	iphosttpye = []
 	doc = pq(html)
 	# print(doc('table'))
 	ip = doc('tbody .tbl-proxy-ip').items()
 	port = doc('tbody .tbl-proxy-port img').items()
-	types = doc('tbody .tbl-proxy-type').items()
+	protocol = doc('tbody .tbl-proxy-type').items()
 	mipu_base = 'https://proxy.mimvp.com/'
 	for i in range(10):
-		# print("{}:{}|{}".format(ip.__next__().text(),urljoin(mipu_base,port.__next__().attr('src')),type.__next__().text()))
-		iphosttpye.append([ip.__next__().text(),urljoin(mipu_base,port.__next__().attr('src')),types.__next__().text()])
+		# print("{}:{}|{}".format(ip.__next__().text(),urljoin(mipu_base,port.__next__().attr('src')),protocol.__next__().text()))
+		iphosttpye.append([ip.__next__().text(),urljoin(mipu_base,port.__next__().attr('src')),protocol.__next__().text()])
 	return iphosttpye
 
 def getkdl_proxies(html):
@@ -103,3 +99,4 @@ if __name__ == '__main__':
 		struct=getkdl_proxies(testhtml)
 		write_file(struct)
 		sleep(2)#必须加，网站有请求间隔限制，不然无法返回正确值
+	print("代理刷新完成")
