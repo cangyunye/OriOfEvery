@@ -2,6 +2,9 @@ import requests
 import random
 from pyquery import PyQuery as pq
 from urllib.parse import urljoin
+from time import sleep
+
+
 
 
 
@@ -44,9 +47,7 @@ def get_html(url):
 
 
 def getmipu_proxies(html):
-	#写入mysql的结构体
-	struct2mysql = []
-	# 组合成代理
+	iphosttpye = []
 	doc = pq(html)
 	# print(doc('table'))
 	ip = doc('tbody .tbl-proxy-ip').items()
@@ -55,31 +56,30 @@ def getmipu_proxies(html):
 	mipu_base = 'https://proxy.mimvp.com/'
 	for i in range(10):
 		# print("{}:{}|{}".format(ip.__next__().text(),urljoin(mipu_base,port.__next__().attr('src')),type.__next__().text()))
-		struct2mysql.append([ip.__next__().text(),urljoin(mipu_base,port.__next__().attr('src')),types.__next__().text()])
-	return struct2mysql
+		iphosttpye.append([ip.__next__().text(),urljoin(mipu_base,port.__next__().attr('src')),types.__next__().text()])
+	return iphosttpye
 
 def getkdl_proxies(html):
-	#写入mysql的结构体
-	struct2mysql = []
-	# 组合成代理
+	iphosttpye = []
 	doc = pq(html)
 	for i in doc('tbody tr').items():
-		print(i('td').eq(0).text(),i('td').eq(1).text(),i('td').eq(3).text())
-		struct2mysql.append([i('td').eq(0).text(),i('td').eq(1).text(),i('td').eq(3).text()])
-	return struct2mysql
+		# print("{}:{}|{}".format(i('td').eq(0).text(),i('td').eq(1).text(),i('td').eq(3).text()))
+		iphosttpye.append([i('td').eq(0).text(),i('td').eq(1).text(),i('td').eq(3).text()])
+	return iphosttpye
+
 
 
 
 def write_file(content):
 	# 写入保存
-	with open('proxies.csv','w') as pr:
+	with open('proxies.csv','a') as pr:
 		for line in content:
-			print(line)
+			# print(line)
 			pr.writelines(line[0]+","+line[1]+","+line[2]+"\n")
 
 
 if __name__ == '__main__':
-
+	"""
 	mipukaifangdaili = 'https://proxy.mimvp.com/free.php'
 	mipu_base='https://proxy.mimvp.com/'
 	# mipusmhttp = 'https://proxy.mimvp.com/freesecret.php?proxy=in_hp'
@@ -93,7 +93,7 @@ if __name__ == '__main__':
 		testhtml=get_html(url)
 		struct=getmipu_proxies(testhtml)
 		write_file(struct)
-
+	"""
 	kdlnimin='https://www.kuaidaili.com/free/inha/1/'
 	kdlpt='https://www.kuaidaili.com/free/intr/1/'
 	kdl=[kdlnimin,kdlpt]
@@ -102,3 +102,4 @@ if __name__ == '__main__':
 		testhtml=get_html(url)
 		struct=getkdl_proxies(testhtml)
 		write_file(struct)
+		sleep(2)#必须加，网站有请求间隔限制，不然无法返回正确值
