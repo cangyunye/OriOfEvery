@@ -408,6 +408,31 @@ class BcyDownLoader():
 
 		mydb.commit()
 
+	def to_bcy_detail_user(self,json_struct):
+		"""
+		Insert into mysql table bcy_detail_post.
+		:param json_struct:
+		"""
+		mydb = mysql.connector.connect(
+			host="localhost",  # 数据库主机地址
+			user="yunye",  # 数据库用户名
+			passwd="",  # 数据库密码
+			database="")
+		mycursor = mydb.cursor()
+
+		uid = json_struct['detail']['detail_user']['uid']
+		uname = json_struct['detail']['detail_user']['uname']
+		sex = json_struct['detail']['detail_user']['sex']
+		self_intro = json_struct['detail']['detail_user']['self_intro']
+		following = json_struct['detail']['detail_user']['following']
+		follower = json_struct['detail']['detail_user']['follower']
+		utags = json.dumps(json_struct['detail']['detail_user']['utags'])
+		sql = "INSERT INTO bcy_detail_user(uid, uname, sex, self_intro, following, follower, utags) VALUES (%s,%s,%s,%s,%s,%s,%s);"
+		val = [uid, uname, sex, self_intro, following, follower, utags]
+		mycursor.execute(sql, val)
+
+		mydb.commit()
+
 	def usage(self):
 		"""
 		#step1:
