@@ -18,6 +18,8 @@ from time import sleep
 from time import perf_counter
 import functools
 from tqdm import tqdm
+import mysql.connector
+import json
 # import types
 
 __version__bcy__ = '1.0.0'
@@ -29,8 +31,7 @@ __bibtex__ = r"""@Article{cangyunye:2018,
   publisher = {cangyunye},
   year      = 2018
 }"""
-#改造log可以添加信息级别的参数如log('ERROR'),可指定text，如果Text存在，print,否则不输出,需要钩子操作
-
+# 改造log可以添加信息级别的参数如log('ERROR'),可指定text，如果Text存在，print,否则不输出,需要钩子操作
 def log(func):
 	@functools.wraps(func)
 	def wrapper(*args,**kw):
@@ -201,6 +202,7 @@ class BcyDownLoader():
 			return end_page
 		else:
 			articlecount = soup.select_one('#content-box > div > ul > li > span ').string
+			articlecount = re.findall('(\d+)', total_pages)[0]
 			return [articlecount,end_page]
 
 	@log
@@ -260,7 +262,6 @@ class BcyDownLoader():
 		"""
 		Parse the info from Html.
 		"""
-		import json
 		json_img = soupd.find_all(name='script', text=re.compile('JSON.parse(.*);(.*)'))
 		json_img = re.findall('JSON.parse\("(.*)"\);', str(json_img))
 		str_j = eval("'{}'".format(json_img[0]))
@@ -273,8 +274,15 @@ class BcyDownLoader():
 		"""
 		img_list = []
 		for img_l in jd_multi:
-			img_list.append(img_l['path'].rstrip('/w650'))
+			# img_list.append(img_l['path'].rstrip('/w650'))
+			img_list.append(img_l['original_path'])
 		# self.save_img(img_list,ppath=jd_uname,cpath=detail_num)
+		"""
+		Insert to Mysql
+		"""
+		self.to_bcy_detail_post(jd)
+
+
 		return [img_list,jd_uname,detail_num]
 
 	@log
@@ -345,18 +353,60 @@ class BcyDownLoader():
 
 	def process_savedown(self,de_page):
 		"""
-		Save and DownLoad
+		Get JsonInfo and DownLoad pic to local.
 		"""
 		l_info = self.get_jnfo(de_page)
 		self.save_img(l_info[0], ppath=l_info[1], cpath=l_info[2])
+
 	def process_liketail(self,uid):
 		"""
+		Count of all articles in like pages.
 		:param uid:
-		:return:
+		:return:[articlecount,end_page]
 		"""
 		url_join = '/u/{0}/like'.format(uid)
 		url = urljoin(self.bcyurl, url_join)
 		return self.tailpage(self.get_content(url),1)
+
+	def process_bar(self,iterlist):
+		"""
+		Bar to show the process.
+		:param iterlist:
+		:return:
+		"""
+		pass
+
+	def to_bcy_detail_post(self,json_struct):
+		"""
+		:param json_struct:
+		:return:
+		"""
+		mydb = mysql.connector.connect(
+			host="localhost",  # 数据库主机地址
+			user="yunye",  # 数据库用户名
+			passwd="",  # 数据库密码
+			database="")
+		mycursor = mydb.cursor()
+
+		item_id = json_struct['detail']['post_data']['item_id']
+		uid = json_struct['detail']['post_data']['uid']
+		plain = json_struct['detail']['post_data']['plain']
+		multi_original_path = json.dumps(json_struct['detail']['post_data']['multi'])
+		# json_str=[[op['mid'],op['original_path']] for op in multi]
+		work = json_struct['detail']['post_data']['work']
+		# wid=json_struct['detail']['post_data']['wid']
+		try:
+			wid = json_struct['detail']['post_data']['wid']
+		except KeyError as e:
+			wid = 0
+		like_count = json_struct['detail']['post_data']['like_count']
+		reply_count = json_struct['detail']['post_data']['reply_count']
+		share_count = json_struct['detail']['post_data']['share_count']
+		sql = "INSERT INTO bcy_detail_post(item_id, uid, plain, multi_original_path, work, wid, like_count, reply_count, share_count) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s);"
+		val = [item_id, uid, plain, multi_original_path, work, wid, like_count, reply_count, share_count]
+		mycursor.execute(sql, val)
+
+		mydb.commit()
 
 	def usage(self):
 		"""
@@ -390,20 +440,24 @@ class BcyDownLoader():
 
 
 def main():
-	"""
+
 	#指定用户的喜欢页批量下载
 	bcy = BcyDownLoader()
 	bcy.set_uid(605084)
-	url = bcy.Method_Selector(1,1,25)
-	"""
+	url = bcy.Method_Selector(1,1,1)
+
 
 	"""
 	#指定detail下载，可单独使用
 	bcy = BcyDownLoader()
 	bcy.parse_detail(dn='6578730940602777859') 
 	"""
+
+	"""
 	bcy = BcyDownLoader()
 	print(bcy.process_liketail(605084))
+	"""
+
 
 
 if __name__ == '__main__':
