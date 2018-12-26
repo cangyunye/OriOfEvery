@@ -282,8 +282,8 @@ class BcyDownLoader():
 		"""
 		Insert to Mysql
 		"""
-		self.to_bcy_detail_post(jd)
-		self.to_bcy_detail_user(jd)
+		self.insert_to_mysql('bdp',self.to_bcy_detail_post(jd))
+		self.insert_to_mysql('bdu',self.to_bcy_detail_user(jd))
 
 
 		return [img_list,jd_uname,detail_num]
@@ -381,16 +381,9 @@ class BcyDownLoader():
 
 	def to_bcy_detail_post(self,json_struct):
 		"""
+		Insert into mysql table bcy_detail_post.
 		:param json_struct:
-		:return:
 		"""
-		mydb = mysql.connector.connect(
-			host="localhost",  # 数据库主机地址
-			user="yunye",  # 数据库用户名
-			passwd="",  # 数据库密码
-			database="yunye")
-		mycursor = mydb.cursor()
-
 		item_id = json_struct['detail']['post_data']['item_id']
 		uid = json_struct['detail']['post_data']['uid']
 		plain = json_struct['detail']['post_data']['plain']
@@ -405,24 +398,13 @@ class BcyDownLoader():
 		like_count = json_struct['detail']['post_data']['like_count']
 		reply_count = json_struct['detail']['post_data']['reply_count']
 		share_count = json_struct['detail']['post_data']['share_count']
-		sql = "INSERT IGNORE INTO bcy_detail_post(item_id, uid, plain, multi_original_path, work, wid, like_count, reply_count, share_count) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s);"
-		val = [item_id, uid, plain, multi_original_path, work, wid, like_count, reply_count, share_count]
-		mycursor.execute(sql, val)
-
-		mydb.commit()
+		return [item_id, uid, plain, multi_original_path, work, wid, like_count, reply_count, share_count]
 
 	def to_bcy_detail_user(self,json_struct):
 		"""
 		Insert into mysql table bcy_detail_user.
 		:param json_struct:
 		"""
-		mydb = mysql.connector.connect(
-			host="localhost",  # 数据库主机地址
-			user="yunye",  # 数据库用户名
-			passwd="",  # 数据库密码
-			database="yunye")
-		mycursor = mydb.cursor()
-
 		uid = json_struct['detail']['detail_user']['uid']
 		uname = json_struct['detail']['detail_user']['uname']
 		sex = json_struct['detail']['detail_user']['sex']
@@ -430,10 +412,25 @@ class BcyDownLoader():
 		following = json_struct['detail']['detail_user']['following']
 		follower = json_struct['detail']['detail_user']['follower']
 		utags = json.dumps(json_struct['detail']['detail_user']['utags'])
-		sql = "INSERT IGNORE INTO bcy_detail_user(uid, uname, sex, self_intro, following, follower, utags) VALUES (%s,%s,%s,%s,%s,%s,%s);"
-		val = [uid, uname, sex, self_intro, following, follower, utags]
-		mycursor.execute(sql, val)
+		return [uid, uname, sex, self_intro, following, follower, utags]
+
+	@log
+	def insert_to_mysql(self,table,data):
+		mydb = mysql.connector.connect(
+			host="localhost",  # 数据库主机地址
+			user="yunye",  # 数据库用户名
+			passwd="",  # 数据库密码
+			database="yunye")
+		mycursor = mydb.cursor()
+		if table == 'bdu':
+			sql = "INSERT IGNORE INTO bcy_detail_user(uid, uname, sex, self_intro, following, follower, utags) VALUES (%s,%s,%s,%s,%s,%s,%s);"
+			# val = [uid, uname, sex, self_intro, following, follower, utags]
+		elif table == 'bdp':
+			sql = "INSERT IGNORE INTO bcy_detail_post(item_id, uid, plain, multi_original_path, work, wid, like_count, reply_count, share_count) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s);"
+			# val = [item_id, uid, plain, multi_original_path, work, wid, like_count, reply_count, share_count]
+		mycursor.execute(sql, data)
 		mydb.commit()
+
 
 	def usage(self):
 		"""
@@ -477,7 +474,7 @@ def main():
 
 	#指定detail下载，可单独使用
 	bcy = BcyDownLoader()
-	bcy.parse_detail(dn='6578730940602777859')
+	bcy.parse_detail(dn='6634067836945826052')
 
 
 	"""
