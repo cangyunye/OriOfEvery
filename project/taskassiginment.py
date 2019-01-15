@@ -32,7 +32,7 @@ def skillBasedRecommend(roles,task):
    	eg [['hwx',30,60,70,80,50,50],['cwx',0,0,40,50,40,100],['dwx',50,30,80,70,60,30],['nwx',0,100,80,0,30,70]]
 	:param task:一个任务，并含有所有技能需求系数和执行人数
 	eg ['testframe',30,60,70,80,50,50,5]
-	:return:对每个任务按技能最适应排序
+	:return :对每个任务按技能最适应排序
 	"""
 	#初始化技能推荐字典
 	skillRecommend={}
@@ -53,8 +53,17 @@ def skillBasedRecommend(roles,task):
 	#对每个任务按技能最适应排序,sorted返回为list
 	return sorted(skillRecommend.items(),key=lambda item:item[1],reverse=True)
 
-def allTaskFit(tasks):
-	pass
+def allTaskFit(roles,tasks):
+	"""遍历所有任务获取角色能力推荐
+	:param roles:
+	:param tasks:
+	:return :返回为字典，key为任务,value为list型角色适应度排序
+	"""
+	allTask={}
+	for task in tasks:
+		allTask[task[0]]=skillBasedRecommend(roles,task)
+	return allTask
+
 def allotTasks():
 	for task in tasksort:
 		Executor=''
