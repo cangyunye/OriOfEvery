@@ -64,11 +64,47 @@ def allTaskFit(roles,tasks):
 		allTask[task[0]]=skillBasedRecommend(roles,task)
 	return allTask
 
-def allotTasks():
-	for task in tasksort:
-		Executor=''
+def allotTasks(roles,tasks):
+	"""
+	:param Tasks:所有任务及对应任务适应角色匹配度排序
+	"""
+	#获取所有任务角色能力分配(字典)
+	allFit = allTaskFit(roles,tasks)  #{'testframe':[('hwx',200),('cwx',100)]}
+	#任务分配结果
+	allot = []
+	#任务已分配人员
+	Executors = []
+	for task in tasks:
+		#任务执行者数量
+		ExecutorNum = task[-1]
+		#当前人选
+		fit = 0
+		#已分配人数
+		i = 0
+		while i < ExecutorNum:
+			#任务匹配人选
+			BestFit = allFit[task][fit]
+			if  Executors.count(BestFit) == 0 :
+				#添加(任务，人选)
+				allot.append((task[0],BestFit))
+				Executors.append(BestFit)
+				i += 1
+				#人物可分配量重新赋值
+				#重新设计，需要是全局的
+			else:
+				#选择下个人员
+				fit += 1
+				continue
+
+
+
+		
 		task[]
 
 if __name__ == "__main__":
+	#获取数据
 	roles,tasks=datas_test()
-	skillBasedRecommend(roles,task)
+	#任务适应分析
+	allTask=allTaskFit(roles,tasks)
+	#任务分配
+	allotTasks(Tasks)
