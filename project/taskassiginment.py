@@ -39,10 +39,10 @@ def skillBasedRecommend(roles, task):
     eg [['hwx',30,60,70,80,50,50],['cwx',0,0,40,50,40,100],['dwx',50,30,80,70,60,30],['nwx',0,100,80,0,30,70]]
     :param task:一个任务，并含有所有技能需求系数和执行人数
     eg ['testframe', 0, 10, 20, 70, 30, 100, 5]
-    :return :对每个任务按技能最适应排序
+    :return :对每个任务按角色最适应排序
     """
-    # 初始化技能推荐字典
-    skillRecommend = {}
+    # 初始化角色推荐字典
+    roleRecommend = {}
     # 任务能力需求系数
     C = np.array(task[1:-2])  # [0,10,20,70,30]
     # 任务能力涉及度
@@ -54,14 +54,48 @@ def skillBasedRecommend(roles, task):
         D = S*C
         # 求方差
         delta = (D - C) ** 2
+        # 均值归一
         distance = np.max(delta) - np.min(delta)
         divide = N * np.tile(1 * distance, C.shape)
-        sq = np.sqrt((D - C) ** 2 / divide)
+        sq = np.sqrt(delta / divide)
         s_sum = np.sum(sq, axis=0)
         # 添加角色对应适应匹配值到字典
-        skillRecommend[role[0]] = s_sum
+        roleRecommend[role[0]] = s_sum
     # 对每个任务按技能最适应排序,sorted返回为list
-    return sorted(skillRecommend.items(), key=lambda item: item[1], reverse=True)
+    return sorted(roleRecommend.items(), key=lambda item: item[1], reverse=True)
+
+
+def roleBasedRecommend(role, tasks):
+    """根据角色需求技能比重系数S与所有任务技能比重系数C的矢量相乘，即得内积，任务适应值D。
+    :param role:角色
+    eg ['hwx',30,60,70,80,50,50]
+    :param tasks:所有任务，包含所有任务技能系数和执行人数
+    eg [['testframe', 0, 10, 20, 70, 30, 100, 5], ['database', 30, 30, 20, 20, 80, 20, 2], [
+        'excel', 0, 0, 0, 60, 60, 20, 2], ['scriptcomp', 0, 0, 50, 60, 10, 10, 1]]
+    :return :对每个角色按任务最适应排序
+    """
+    # 初始化技能推荐字典
+    taskRecommend = {}
+    # 角色技能比重系数
+    S = np.array(role[1:-1])  # [30,60,70,80,50]
+    # 角色能力涉及度
+    N = len(S)
+    for task in tasks:
+        # 任务技能系数
+        S = np.array(task[1:-2])  # [0, 10, 20, 70, 30]
+        # 任务适应度
+        D = S*C
+        # 求方差
+        delta = (D - S) ** 2
+        #均值归一
+        distance = np.max(delta) - np.min(delta)
+        divide = N * np.tile(1 * distance, C.shape)
+        sq = np.sqrt(delta / divide)
+        s_sum = np.sum(sq, axis=0)
+        # 添加角色对应适应匹配值到字典
+        taskRecommend[task[0]] = s_sum
+    # 对每个任务按技能最适应排序,sorted返回为list
+    return sorted(taskRecommend.items(), key=lambda item: item[1], reverse=True)
 
 
 def allTaskFit(roles, tasks):
@@ -81,7 +115,7 @@ def allotTasks(roles, tasks):
     :param Tasks:所有任务及对应任务适应角色匹配度排序
     """
     # 获取所有任务角色能力分配(字典)
-    # {'testframe':[['hwx',200],['cwx',100]]}
+    # {'testframe':[('hwx',200),('cwx',100)]}
     allFit = allTaskFit(roles, tasks)
     # 所有人员
     workers = set(r[0] for r in roles)  # {'cwx', 'dwx', 'hwx', 'nwx'}
@@ -102,10 +136,10 @@ def allotTasks(roles, tasks):
         taskavg = task[-2]/ExecutorNum
         while i <= ExecutorNum:
             # 任务匹配人选
-            BestFit = allFit[task[0]][fit]  # ('hwx',200)
+            BestFit = allFit[task[0]][fit]  # ('hwx',匹配度)
             print(f"{BestFit[0]}已分配{Executors.count(BestFit[0])}剩余分配量{assignment[BestFit[0]]}任务要求均值{task[-2]}")
             if Executors.count(BestFit[0]) == 0 and assignment[BestFit[0]] >= taskavg:
-                # 人物可分配量重新赋值
+                # 角色剩余可分配量计算
                 assignment[BestFit[0]] -= taskavg
                 # 添加(任务，人选)
                 allot.append([task[0], list(BestFit)]) # ['testframe',['hwx',200]]
@@ -139,7 +173,7 @@ def writeToCsv(content):
     title = 'task,role,adaption'
     with open('Assiginment_{}.csv'.format(datetime.now().day)) as f:
         f.write(title)
-        f.writeliness(content)
+        f.writelines(content)
 
 
 
