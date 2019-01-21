@@ -102,13 +102,24 @@ def allTaskFit(roles, tasks):
     """遍历所有任务获取角色能力推荐
     :param roles:
     :param tasks:
-    :return :返回为字典，key为任务,value为list型角色适应度排序
+    :return :返回为字典，key为任务,value为tuple型角色适应度排序
     """
     allTask = {}
     for task in tasks:
         allTask[task[0]] = skillBasedRecommend(roles, task)
     return allTask
 
+
+def allroleFit(roles, tasks):
+    """遍历所有角色获取任务适应推荐
+    :param roles:
+    :param tasks:
+    :return :返回为字典，key为角色,value为tuple型任务适应度排序
+    """
+    allRole = {}
+    for role in roles:
+        allRole[task[0]] = roleBasedRecommend(role, tasks)
+    return allRole
 
 def allotTasks(roles, tasks):
     """
