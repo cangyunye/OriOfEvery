@@ -123,7 +123,9 @@ def allroleFit(roles, tasks):
 
 def allotTasks(roles, tasks):
     """
-    :param Tasks:所有任务及对应任务适应角色匹配度排序
+    :param roles:
+    :param tasks:
+    :return allot:分配结果
     """
     # 获取所有任务角色能力分配(字典)
     # {'testframe':[('hwx',200),('cwx',100)]}
@@ -149,6 +151,7 @@ def allotTasks(roles, tasks):
             # 任务匹配人选
             BestFit = allFit[task[0]][fit]  # ('hwx',匹配度)
             print(f"{BestFit[0]}已分配{Executors.count(BestFit[0])}剩余分配量{assignment[BestFit[0]]}任务要求均值{task[-2]}")
+            # 选定角色是否分配过任务，当前可分配余量是否大于任务要求量
             if Executors.count(BestFit[0]) == 0 and assignment[BestFit[0]] >= taskavg:
                 # 角色剩余可分配量计算
                 assignment[BestFit[0]] -= taskavg
@@ -174,10 +177,48 @@ def allotTasks(roles, tasks):
     print(allot) #[['testframe', ('hwx', 22183627.91253946)]]
     return allot
 
-def allotRoles():
-    """按角色优先分配
+def allotRoles(roles, tasks):
     """
-    pass
+    :param roles:
+    :param tasks:
+    :return allot:分配结果
+    """
+    # 获取所有角色人物适应
+    # {'hwx':[('testframe',1),('database',0.5)]}
+    allFit = allRoleFit(roles,tasks)
+    # 所有任务
+    mission = set(r[0] for r in tasks) #{'testframe','database','excel','scriptcomp'}
+    # 任务余量
+    assignment = {k[0]: [k[-2],k[-1]] for k in tasks} #{'testframe':[100,5],'database':[20,2],'excel':[20,2],'scriptcomp':[10,1]}
+    # 任务分配结果
+    allot = []
+    # 角色已分配任务
+    Executors = []
+    for role in roles:
+        # 角色剩余可分配量
+        ExecutorTim = role[-1]
+        # 当前任务
+        fit = 0
+        # 已分配量
+        i = 0
+        while i <= ExecutorTim:
+            # 角色匹配任务
+            BestFit = allFit[role[0]][fit] # {'testframe',匹配度}
+            print(f"{BestFit[0]}已分配{Executors.count(BestFit[0])}任务剩余分配量{assignment[BestFit[0]]}任务要求均值{task[-2]}")
+            # 任务均分量
+            taskavg = x[0]/x[1] for x in assignment[BestFit[0]]
+            # 选定任务是否分配过，任务均量是否小于角色可分配量
+            if Executors.count(BestFit[0]) == 0 and taskavg <= ExecutorTim:
+                # 角色剩余可分配量计算
+                assignment[BestFit[0]] -= taskavg
+                # 添加(任务，人选)
+                allot.append([task[0], list(BestFit)]) # ['testframe',['hwx',200]]
+                Executors.append(BestFit[0])
+                print(f"{task[0]}分配{BestFit},已分配第{i}个")
+                i += 1
+
+
+
 
 def writeToCsv(content):
     from datetime import datetime
