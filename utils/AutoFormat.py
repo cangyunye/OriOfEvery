@@ -18,35 +18,25 @@ vals = ['IT100','20190219','20190319','hy']
 
 
 #method1
-def fmt(num,s):
-	it = ',%s' % (s)
-	return  '%s' % (s) + (num - 1) * it
-COLUMNS = fmt(len(cols),'%s')
-VALUES = fmt(len(vals),'%s')
-
-def fmv(cols,s=''):
-	while len(cols)>1:
-		s = s + cols.pop() + ','
-	return s + cols.pop()
-
-sql=f"INSERT INTO TABLE1 ( {COLUMNS} ) VALUES ( {VALUES} )" % (fmv(cols+vals))
+def method1(cols,vals):
+	COLUMNS = ",".join(cols) #可取消字符串对应的单引号
+	VALUES = tuple(vals) #自带括号
+	sql=f"INSERT INTO TABLE1  ({COLUMNS})  VALUES {VALUES}"
 
 
 #method2
-from functools import reduce
+def method2(cols,vals):
+	from functools import reduce
+	# 拼接列
+	COLUMNS = reduce(lambda x,y:x + ',' + y,cols)
+	# 拼接值
+	VALUES = reduce(lambda x,y:x + ',' + y,vals)
+	sql = "INSERT INTO TABLE1 ( {COLUMNS} ) VALUES ( {VALUES} )".format(COLUMNS=COLUMNS, VALUES=VALUES)
 
-def merge(iterstr):
-	return reduce(lambda x,y:x + ',' + y,iterstr)
-# 拼接列
-COLUMNS = merge(cols)
-# 拼接值
-VALUES = merge(vals)
-sql="INSERT INTO TABLE1 ( {COLUMNS} ) VALUES ( {VALUES} )"
-sql.format(COLUMNS=COLUMNS,VALUES=VALUES)
 
 #method3
-
-COLUMNS = ",".join(cols)
-VALUES = ",".join(vals)
-sql="INSERT INTO TABLE1 ( {COLUMNS} ) VALUES ( {VALUES} )"
-sql.format(COLUMNS=COLUMNS,VALUES=VALUES)
+def method3(cols,vals):
+	COLUMNS = ",".join(cols)
+	VALUES = ",".join(vals)
+	sql="INSERT INTO TABLE1 ( {COLUMNS} ) VALUES ( {VALUES} )"
+	sql.format(COLUMNS=COLUMNS,VALUES=VALUES)
