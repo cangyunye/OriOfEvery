@@ -3,7 +3,7 @@ import subprocess
 """
 后续需要设计为支持上下文管理器with形式
 """
-class oracleop():
+class DBOperator():
 
 	def __init__(self,user,passwd,dsn=None):
 		"""
@@ -16,23 +16,26 @@ class oracleop():
 		self.dsn=dsn
 
 	def __enter__(self):
-		return self
+		self.client = self.connect(user=self.user,passwd=self.passwd,database='oracle',dsn=self.dsn,mode='s')
+		return self.client
 
 	def __exit__(self, *args):
 		self.close()
 
-	def connection(self,database='oracle',mode='s'):
+	def connect(self,user,passwd,database='oracle',dsn,mode='s'):
 		"""
 		:param database:
 		:param mode:
 		:return:
 		"""
 		if database.upper() == 'ORACLE':
-			conn = "sqlplus -S " + self.user + "/" + self.passwd + "@" + self.dsn
+			conn = f"sqlplus -S {user}/{passwd}@{dsn}"
 		elif database.upper() == 'MYSQL' :
-			conn = "mysql -u" + self.user + " -p" + self.passwd
-			if self.dsn:
-				conn = conn + " -h" + self.dsn
+			conn = f"mysql -u{user}-p{passwd}"
+			if dsn:
+				conn = conn + " -h" + dsn
+		elif database.upper() == 'TIMESTEN':
+			conn = f'ttisqlcs "dsn={dsn};uid={user};pwd={passwd}"'
 		else :
 			conn = input("ConnectSting:")
 		try:
@@ -57,9 +60,9 @@ class oracleop():
 		except Exception as e:
 			print(e)
 
-	def close(self,p):
-		p.stdin.write("exit")
-		return p.communicate()
+	def close(self):
+		self.client.stdin.write("exit")
+		return self.client.communicate()
 
 	def run(self,sql):
 		"""
@@ -67,7 +70,7 @@ class oracleop():
 		:return:bytes to be decode('utf-8')
 		"""
 		try:
-			conn = "sqlplus -S " + self.user + "/" + self.passwd + "@" + self.dsn
+			conn = f"sqlplus -S {self.user}/{self.passwd}@{self.dsn}"
 			p = subprocess.Popen(conn,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
 			p.stdin.write(setinit)
 			p.stdin.write(sql)
