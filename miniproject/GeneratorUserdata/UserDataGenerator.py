@@ -5,18 +5,14 @@ import textwrap
 import os
 import json
 
-#init
-__brand__=["BrandSzx","BrandGotone"]
-#root path for os.path.join
-rootdir=os.getcwd()
-busidir=os.path.join(rootdir,'business')
+
 __description__ = textwrap.dedent('''\
-            About the project you need to know
-         ---------------------------------------
-            Designed for generate user data.
-            Supplying which is absent from we need.
-            Expansibility by configs.
-            ''')
+			About the project you need to know
+		 ---------------------------------------
+			Designed for generate user data.
+			Supplying which is absent from we need.
+			Expansibility by configs.
+			''')
 
 __version__ = "GU.0.0.1"
 parser = argparse.ArgumentParser(description=__description__, formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -43,12 +39,35 @@ parser.add_argument('-v','--version', help='version:%s' % (__version__))
 
 args = parser.parse_args()
 
+#init
+__brand__=["BrandSzx","BrandGotone"]
+#root path for os.path.join
+rootdir=os.getcwd()
+busidir=os.path.join(rootdir,'business')
 
+#global variable for append sql when cbrand,cactive,croute
+global datalist = []
 
 def cbrand(brand=args.brand):
 	if brand.upper()=='SZX':
+		#加载预付费专属配置ABM_BILL_DAY等等
+		pass
+	elif brand.upper()=='GT':
 		pass
 	pass
+
+def selfclean(table,wh=None):
+	#清理表，条件待定
+	pass
+
+def cactive():
+	# 调用sqlplus查询，或者直接给定状态
+	pass
+
+def croute():
+	# 调用sqlplus查询，或者直接给定状态
+	pass
+
 
 def readcfg(cfg=args.cfg):
 	#判断是否列表
