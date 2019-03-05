@@ -44,9 +44,10 @@ __brand__=["BrandSzx","BrandGotone"]
 #root path for os.path.join
 rootdir=os.getcwd()
 busidir=os.path.join(rootdir,'business')
+sqlfdir=os.path.join(rootdir,'sqlfiles')
 
 #global variable for append sql when cbrand,cactive,croute
-global datalist = []
+datalist =[]
 
 def cbrand(brand=args.brand):
 	if brand.upper()=='SZX':
@@ -73,6 +74,7 @@ def readcfg(cfg=args.cfg):
 	#判断是否列表
 
 	#读取单个配置
+	cfg = os.path.join(busidir,args.cfg)
 	with open(cfg,'r',encoding='utf-8') as f:
 		jdata=json.load(f)
 	#删除注释
@@ -83,12 +85,16 @@ def readcfg(cfg=args.cfg):
 
 
 def cfgparser(jdata):
-	#解析key
+	"""
+	:param jdata: config file with suffix json.
+	:return:
+	"""
 	for k in jdata.keys() :
 		DbDriver,Table,DML,BusiUniq=k.split(".")
 		data=replacer(jdata[k])
-		generator(data)#生成sql文件
-		#loadtobase(DbDriver,data)#加载到数据库
+		yield data
+		# generator(data)#生成sql文件
+		# loadtobase(DbDriver,data)#加载到数据库
 	pass
 
 def replacer(tbd,**var_dict):
