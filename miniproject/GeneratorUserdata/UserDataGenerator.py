@@ -91,9 +91,13 @@ def cfgparser(jdata):
 		#loadtobase(DbDriver,data)#加载到数据库
 	pass
 
-def replacer(tbd):
-	#sql模板语句处理器,用于替换sql中的变量
-	pass
+def replacer(tbd,**var_dict):
+	"""
+	:param tbd:sql model to be replace.
+	:param var_dict:matched variables for sql model.
+	:return:
+	"""
+	return tbd.format(**var_dict)
 
 def generator(data):
 	with open(os.path.join(busidir,'%i_%s.sql' % (args.serv,args.cfg)),'a',encoding='utf-8') as f:
