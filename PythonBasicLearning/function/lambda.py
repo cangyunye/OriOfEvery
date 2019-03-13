@@ -16,3 +16,7 @@ for i in items:
 """
 items = [1, 2, 3, 4, 5]
 squared = list(map(lambda x: x**2, items))
+
+
+f=lambda x,y: True if (x+y) % 2==0 else False
+print(f(1,1),f(1,2))
