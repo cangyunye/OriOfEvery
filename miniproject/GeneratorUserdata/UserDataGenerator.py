@@ -4,7 +4,10 @@ import argparse
 import textwrap
 import os
 import json
-
+from datetime import datetime
+from utils import lunar
+from configparser import ConfigParser
+#from pprint import ppringt
 
 __description__ = textwrap.dedent('''\
 			About the project you need to know
@@ -14,14 +17,14 @@ __description__ = textwrap.dedent('''\
 			Expansibility by configs.
 			''')
 
-__version__ = "GU.0.0.1"
+__version__ = "GU.0.0.2"
 parser = argparse.ArgumentParser(description=__description__, formatter_class=argparse.RawDescriptionHelpFormatter,
 								 prog='UserDataGenerator', epilog="Nowhere to be seen.")
 #argument:servnumber,region,cfgfile
-parser.add_argument('servnumber', metavar='serv', type=int,
+parser.add_argument('servnumber', metavar='servnumber', type=str,
 					help='The 11 integer for the servnumber.')
 
-parser.add_argument('region', metavar='rg', type=str,
+parser.add_argument('region', metavar='region', type=str,
 					help='The region of servnumber.')
 
 parser.add_argument('-c','--config', action='append',dest='cfg',nargs='+',
@@ -35,6 +38,7 @@ parser.add_argument('-e','--env', required=False, type=str,choices=['crm','CRM',
 
 #add_help
 parser.add_argument('-v','--version', help='version:%s' % (__version__))
+parser.add_argument('-d','--debug',action='store_true',help='show about debug',default=False)
 
 
 args = parser.parse_args()
@@ -45,17 +49,71 @@ __brand__=["BrandSzx","BrandGotone"]
 rootdir=os.getcwd()
 busidir=os.path.join(rootdir,'business')
 sqlfdir=os.path.join(rootdir,'sqlfiles')
+predata=os.path.join(rootdir,'predata')
+
 
 #global variable for append sql when cbrand,cactive,croute
 datalist =[]
+def direxist(dir):
+	if not os.path.exists(dir):
+		os.makedirs(dir,mode=0o777)
+dt = datetime.now()
+
+
+def replace_dict(cfgfile):
+	"""
+	Get the Variables configfiles for initial.
+	:param cfgfile:
+	:return:
+	"""
+	init_dict = {}
+	list_key = []
+	cfg = ConfigParser()
+	cfg.read(cfgfile)
+	seclist = [sec for sec in cfg.sections()]
+	for sec in seclist:
+		for col in cfg[sec]:
+			list_key.append(col)
+			init_dict[col] = cfg[sec][col]
+			# pprint(init_dict)
+	return init_dict
+
+def init_dict():
+	# 初始化替换变量
+	var_dict = {'servnumber':argss.servnumber,
+				'subsid':'100'+args.servnumber,
+				'acctid':'100'+args.servnumber,
+				'custid':'100'+args.servnumber,
+				'subsprodid':args.servnumber+'01',
+				'statusdate':dt.strftime("%Y%m%d"),
+				'region':args.cfg,
+				'lifestatedate':dt.strftime("%Y%m%d"),
+				'prolongstartdate':dt.strftime("%Y%m%d"),
+				'changedate':dt.strftime("%Y%m%d")
+				}
+	return var_dict
 
 def cbrand(brand=args.brand):
 	if brand.upper()=='SZX':
 		#加载预付费专属配置ABM_BILL_DAY等等
-		pass
+		szx_dict = {'billtime':dt.strftime("%Y%m%d"),
+					'billday':dt.strftime("%Y%m%d"),
+					'nextbillday':lunar.lunar(dt).nextbillday,
+					'billcycle':dt.strftime("%Y%m00")}
+		# sql数据列
+		jdata = readcfg(cfg='base_BrandSzx_0001.json')
+		u = cfgparser(jdata)
+		for tbdsql,DbDriver in u:
+			print(f"DbDriver={DbDriver},tbdsql={tbdsql}")
+			sql = replacer(tbdsql,**szx_dict)
+			sql_list.append((sql,DbDriver))
 	elif brand.upper()=='GT':
 		pass
-	pass
+	else:
+		print("May be wrong with cfgfiles.")
+
+
+
 
 def selfclean(table,wh=None):
 	#清理表，条件待定
@@ -82,32 +140,43 @@ def readcfg(cfg=args.cfg):
 	return jdata
 
 
-
-
 def cfgparser(jdata):
 	"""
-	:param jdata: config file with suffix json.
+	加载业务配置
+	:param jdata:
 	:return:
 	"""
-	for k in jdata.keys() :
-		DbDriver,Table,DML,BusiUniq=k.split(".")
-		data=replacer(jdata[k])
-		yield data
-		# generator(data)#生成sql文件
-		# loadtobase(DbDriver,data)#加载到数据库
-	pass
+	for k in jdata.keys():
+		DbDriver,Table,DML,BusiUniq = k.split(".")
+		sql = replacer(jdata[k],**init_dict())
+		# print(sql,DbDriver)
+		yield sql,DbDriver
 
-def replacer(tbd,**var_dict):
+
+def replacer(tbdsql,**var_dict):
 	"""
 	:param tbd:sql model to be replace.
 	:param var_dict:matched variables for sql model.
 	:return:
 	"""
-	return tbd.format(**var_dict)
+	try:
+		sql = tbdsql.format(**var_dict)
+		return sql
+	except ValueError as e:
+		print(e)
+		print("通常来说，你可能输错值了。")
 
-def generator(data):
-	with open(os.path.join(busidir,'%i_%s.sql' % (args.serv,args.cfg)),'a',encoding='utf-8') as f:
-		f.write(data)
+def generator(sql,DbDriver='oracle'):
+	"""
+	DbDriver,tbdsql in cfgparser(jdata
+	:param sql:
+	:param DbDriver:
+	:return:
+	"""
+	with open(os.path.join(sqlfdir,'%s_%s.sql' % (DbDriver,args.servnumber)),'a',encoding='utf-8') as f:
+		f.write(sql)
+		f.write("\n")
+	print(f"记录追加:{DbDriver}_{args.servnumber}.sql")
 
 if __name__ == '__main__':
 	pass
