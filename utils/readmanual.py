@@ -54,6 +54,7 @@ def rdls(txt):
 			elif status == 1:
 				print('3')
 				DIR[name].append(line)
+				print(re.split(r'\|',line))
 			elif re.search(p_end,line):
 				print('4')
 				status = 0
