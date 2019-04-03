@@ -2,8 +2,8 @@ import asyncio
 from collections.abc import Generator,Coroutine
 import time
 """
-常规协程
-学习资料
+学习异步处理
+阅读顺序：
 https://cuiqingcai.com/6160.html
 http://python.jobbole.com/88291/
 http://aosabook.org/en/500L/a-web-crawler-with-asyncio-coroutines.html
@@ -14,7 +14,9 @@ http://python.jobbole.com/89290/
 
 async def wy(t):
     print("wy:Begin from {} sleep {}s.".format(time.strftime("%Y-%m-%d %H:%M:%S",time.localtime()),t))
+    # 通过await 挂起任务等待输出，同时执行其他任务
     await asyncio.sleep(t)
+    # 如果这里使用await time.sleep(t)是没有用的，因为time.sleep 是阻塞,await挂起的对象本身需要是异步的
     print("wy:End sleep at {}.".format(time.strftime("%Y-%m-%d %H:%M:%S",time.localtime())))
 
 # 协程顺序运行
