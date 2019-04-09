@@ -1,9 +1,11 @@
 import requests
 import re
 from pyquery import PyQuery as pq
+from urllib.parse import quote, unquote, urlencode
 import random
 from collections import namedtuple
 from pprint import pprint
+import json
 
 
 class crawlerftx():
@@ -30,10 +32,10 @@ class crawlerftx():
 			"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/535.24 (KHTML, like Gecko) Chrome/19.0.1055.1 Safari/535.24",
 			"Mozilla/5.0 (Windows NT 6.2; WOW64) AppleWebKit/535.24 (KHTML, like Gecko) Chrome/19.0.1055.1 Safari/535.24"
 		]
+		# 'Referer': 'http://gz.newhouse.fang.com/house/s/',
+		# 'Host': 'xiangjiangtianfu.fang.com',
 		self.headers = {
 			'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
-			'Host': 'xiangjiangtianfu.fang.com',
-			'Referer': 'http://gz.newhouse.fang.com/house/s/',
 			'Upgrade-Insecure-Requests': '1',
 			'User-Agent': random.choice(self.user_agent_list)
 		}
@@ -48,9 +50,9 @@ class crawlerftx():
 		# 导航栏链接（楼盘详情页，楼盘户型页）
 		nav = doc('#orginalNaviBox a')
 		url_detail = 'https:'+nav.eq(1).attr('href')
-		url_huxing = 'https:'+nav.eq(2).attr('href')
+		url_htype = 'https:'+nav.eq(2).attr('href')
 		navigator = namedtuple("navigator", ['detail', 'type'])
-		return navigator(url_detail, url_huxing)
+		return navigator(url_detail, url_htype)
 
 	def lphomepage(self, doc):
 		# 楼盘首页
@@ -118,26 +120,26 @@ class crawlerftx():
 			traffic, kindergarten, education, univercity, coodepartment, hospital, bank, rest, facilities)
 		return information
 
-	def housetype(self, url):
-		# 户型页，但是以下参数需要进行人工拼接
-		query_string = {
-			'newcode': 2812199376,
+	def housetype(self, url,url_htype,newcode,city):
+		# 户型页
+		query_str = {
+			'newcode': newcode,
 			'count': 'false',
-			'start': 12,
-			'limit': 12,
 			'room': 'all',
-			'city': '%E5%B9%BF%E5%B7%9E'
+			'city': quote(city)
 		}
 		url_house = url+"house/ajaxrequest/householdlist_get.php?"
 		headers = {
-			'Referer': 'https://xiangjiangtianfu.fang.com/photo/list_900_2811174364.htm',
+			'Referer': url_htype,
 			'User-Agent': random.choice(self.user_agent_list),
 			'x-requested-with': 'XMLHttpRequest'
 		}
 		houses_ajax = requests.get(
-			url_house, params=query_string, headers=headers)
-		return houses_ajax
+			url_house, params=query_str, headers=headers)
+		return houses_ajax.json()
 
+		def writetofile(self, parameter_list):
+			pass
 
 def main():
 	# 定位楼盘首页
@@ -146,13 +148,23 @@ def main():
 	doc = ftx.ftxparser(url)
 	hp = ftx.lphomepage(doc)
 	pprint(hp)
+	# 楼盘导航栏
 	nav = ftx.navparser(doc)
-	url_detail, url_huxing = nav.detail, nav.type
-	print(url_detail, '\n', url_huxing)
+	url_detail, url_htype = nav.detail, nav.type
+	print(url_detail, '\n', url_htype)
 	doc_d = ftx.ftxparser(url_detail)
-	doc_h = ftx.ftxparser(url_huxing)
+	doc_h = ftx.ftxparser(url_htype)
+	# 楼盘详情页
 	lp = ftx.lpdetailpage(doc_d)
 	pprint(lp)
+	# 楼盘编号
+	newcode = url_detail.split('/')[-2]
+	# 楼盘房型
+	ht = ftx.housetype(url,url_htype,newcode,'广州')
+	pprint(ht)
+	with open('xjtf.json','w') as f:
+		f.writelines(json.dumps(ht,ensure_ascii=False,indent=4))
+
 
 if __name__ == "__main__":
 	main()
