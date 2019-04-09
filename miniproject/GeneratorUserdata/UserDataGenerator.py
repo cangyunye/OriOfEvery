@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+# !/usr/bin/python3
 # -*- coding: utf-8 -*-
 import argparse
 import textwrap
@@ -28,11 +28,15 @@ parser.add_argument('region', metavar='region', type=str,
 					help='The region of servnumber.')
 
 parser.add_argument('-c','--config', action='append',dest='cfg',nargs='+',
-					help='The region of servnumber.')
+					help='Specific business config.')
 
 #addtional info
 parser.add_argument('-b','--brand', required=False, type=str,choices=['szx','SZX','gt','GT'],
 					help='Brand like szx as BrandSzx or gt as BrandGotone.')
+parser.add_argument('-a','--active', required=False, type=str,action="store_true",
+					help='If this servnumber activated.')
+parser.add_argument('-r','--route', required=False, type=str,action="store_true",
+					help='If route info is exists.')
 parser.add_argument('-e','--env', required=False, type=str,choices=['crm','CRM','test','TEST'],
 					help='Environment like crm as or test.')
 
@@ -54,10 +58,12 @@ predata=os.path.join(rootdir,'predata')
 
 #global variable for append sql when cbrand,cactive,croute
 datalist =[]
+sql_list = []
+dt = datetime.now()
 def direxist(dir):
 	if not os.path.exists(dir):
 		os.makedirs(dir,mode=0o777)
-dt = datetime.now()
+
 
 
 def replace_dict(cfgfile):
@@ -80,7 +86,7 @@ def replace_dict(cfgfile):
 
 def init_dict():
 	# 初始化替换变量
-	var_dict = {'servnumber':argss.servnumber,
+	var_dict = {'servnumber':args.servnumber,
 				'subsid':'100'+args.servnumber,
 				'acctid':'100'+args.servnumber,
 				'custid':'100'+args.servnumber,
@@ -92,6 +98,11 @@ def init_dict():
 				'changedate':dt.strftime("%Y%m%d")
 				}
 	return var_dict
+
+def selfclean(table,wh=None):
+	#清理表，条件待定
+	pass
+
 
 def cbrand(brand=args.brand):
 	if brand.upper()=='SZX':
@@ -113,24 +124,50 @@ def cbrand(brand=args.brand):
 		print("May be wrong with cfgfiles.")
 
 
-
-
-def selfclean(table,wh=None):
-	#清理表，条件待定
-	pass
-
-def cactive():
+def cactive(active=args.active):
 	# 调用sqlplus查询，或者直接给定状态
-	pass
+	if active is True:
+		#加载激活专属配置
+		act_dict = {'billtime':dt.strftime("%Y%m%d"),
+					'billday':dt.strftime("%Y%m%d"),
+					'nextbillday':lunar.lunar(dt).nextbillday,
+					'billcycle':dt.strftime("%Y%m00")}
+		# sql数据列
+		jdata = readcfg(cfg='active_BrandSzx_0001.json')
+		u = cfgparser(jdata)
+		for tbdsql,DbDriver in u:
+			print(f"DbDriver={DbDriver},tbdsql={tbdsql}")
+			sql = replacer(tbdsql,**act_dict)
+			sql_list.append((sql,DbDriver))
+	elif active is False:
+		pass
+	else:
+		print("May be wrong with cfgfiles.")
 
-def croute():
+
+def croute(route=args.route):
 	# 调用sqlplus查询，或者直接给定状态
-	pass
-
+	if route is True:
+		#加载路由专属配置
+		r_dict = {'billtime':dt.strftime("%Y%m%d"),
+					'billday':dt.strftime("%Y%m%d"),
+					'nextbillday':lunar.lunar(dt).nextbillday,
+					'billcycle':dt.strftime("%Y%m00")}
+		# sql数据列
+		jdata = readcfg(cfg='route_BrandSzx_0001.json')
+		u = cfgparser(jdata)
+		for tbdsql,DbDriver in u:
+			print(f"DbDriver={DbDriver},tbdsql={tbdsql}")
+			sql = replacer(tbdsql,**r_dict)
+			sql_list.append((sql,DbDriver))
+	elif route is False:
+		pass
+	else:
+		print("May be wrong with cfgfiles.")
 
 def readcfg(cfg=args.cfg):
 	#判断是否列表
-
+	
 	#读取单个配置
 	cfg = os.path.join(busidir,args.cfg)
 	with open(cfg,'r',encoding='utf-8') as f:
