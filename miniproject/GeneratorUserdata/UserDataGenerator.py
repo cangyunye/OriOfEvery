@@ -5,6 +5,7 @@ import textwrap
 import os
 import json
 from datetime import datetime
+from dateutil.relativedelta import relativedelta
 from utils import lunar
 from configparser import ConfigParser
 #from pprint import ppringt
@@ -83,6 +84,15 @@ def replace_dict(cfgfile):
 			init_dict[col] = cfg[sec][col]
 			# pprint(init_dict)
 	return init_dict
+
+def mfdate(inidate,mode=1):
+	# 读取ini中的datetime对象进行格式化
+    if mode == 1:
+        statement='(%s).' % (inidate)+'strftime("%Y-%m-%d %H:%M:%S")'
+    elif mode ==2:
+        statement='(%s).' % (inidate)+'strftime("%Y%m%d%H%M%S")'
+    return eval(statement)
+
 
 def init_dict():
 	# 初始化替换变量
