@@ -46,8 +46,8 @@ class MailCreater():
 		name, addr = parseaddr(s)
 		return formataddr((Header(name, 'utf-8').encode(), addr))
 
-	def create_email(self,email_from, email_to, email_Subject, email_text, annex_path, annex_name):
-		# 输入发件人昵称、收件人昵称、主题，正文，附件地址,附件名称生成一封邮件
+	def create_email(self,email_from, email_to, email_cc,email_Subject, email_text, annex_path, annex_name):
+		# 输入发件人昵称、收件人昵称、抄送人、主题，正文，附件地址,附件名称生成一封邮件
 		# 生成一个空的带附件的邮件实例
 		message = MIMEMultipart()
 		# 将正文以text的形式插入邮件中
@@ -56,6 +56,8 @@ class MailCreater():
 		message['From'] =  self._format_addr(email_from)
 		# 生成收件人名称（这个跟接收的邮件也没有关系）
 		message['To'] =  self._format_addr(email_to)
+		# 生成收件人名称（这个跟接收的邮件也没有关系）
+		message['Cc'] =  ";".join(email_cc)
 		# 生成邮件主题
 		message['Subject'] = Header(email_Subject, 'utf-8')
 		# 读取附件的内容
@@ -72,6 +74,7 @@ class MailCreater():
 def main():
 	my_email_from = 'fei frommail@163.com'
 	my_email_to = 'yue tomail@gmail.com'
+	my_email_cc =[ 'test1@gmail.com', 'test2@gmail.com']
 	# 邮件标题
 	my_email_Subject = '啊哈？怎么回事'
 	# 邮件正文
@@ -93,7 +96,7 @@ def main():
 	with MailSession(my_sender,my_password,smtp_server) as ms:
 		mc = MailCreater()
 		# 创建邮件内容生成
-		msg = mc.create_email(my_email_from, my_email_to, my_email_Subject,
+		msg = mc.create_email(my_email_from, my_email_to, my_email_cc，my_email_Subject,
 					  my_email_text, my_annex_path, my_annex_name)
 		# 发送邮件
 		ms.sendmail(my_sender, my_receiver, msg.as_string())
