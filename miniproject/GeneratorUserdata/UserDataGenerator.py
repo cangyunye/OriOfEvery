@@ -1,229 +1,253 @@
-# !/usr/bin/python3
-# -*- coding: utf-8 -*-
-import argparse
-import textwrap
+#/usr/bin/python3
+#-*- coding :utf-8 -*-
+#@author :cangyunye
+#@email :cangyunye@gmail.com
 import os
 import json
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 from utils import lunar
 from configparser import ConfigParser
-#from pprint import ppringt
-
-__description__ = textwrap.dedent('''\
-			About the project you need to know
-		 ---------------------------------------
-			Designed for generate user data.
-			Supplying which is absent from we need.
-			Expansibility by configs.
-			''')
-
-__version__ = "GU.0.0.2"
-parser = argparse.ArgumentParser(description=__description__, formatter_class=argparse.RawDescriptionHelpFormatter,
-								 prog='UserDataGenerator', epilog="Nowhere to be seen.")
-#argument:servnumber,region,cfgfile
-parser.add_argument('servnumber', metavar='servnumber', type=str,
-					help='The 11 integer for the servnumber.')
-
-parser.add_argument('region', metavar='region', type=str,
-					help='The region of servnumber.')
-
-parser.add_argument('-c','--config', action='append',dest='cfg',nargs='+',
-					help='Specific business config.')
-
-#addtional info
-parser.add_argument('-b','--brand', required=False, type=str,choices=['szx','SZX','gt','GT'],
-					help='Brand like szx as BrandSzx or gt as BrandGotone.')
-parser.add_argument('-a','--active', required=False, type=str,action="store_true",
-					help='If this servnumber activated.')
-parser.add_argument('-r','--route', required=False, type=str,action="store_true",
-					help='If route info is exists.')
-parser.add_argument('-e','--env', required=False, type=str,choices=['crm','CRM','test','TEST'],
-					help='Environment like crm as or test.')
-
-#add_help
-parser.add_argument('-v','--version', help='version:%s' % (__version__))
-parser.add_argument('-d','--debug',action='store_true',help='show about debug',default=False)
-
-
-args = parser.parse_args()
+from collections import namedtuple
 
 #init
 __brand__=["BrandSzx","BrandGotone"]
+
 #root path for os.path.join
 rootdir=os.getcwd()
 busidir=os.path.join(rootdir,'business')
 sqlfdir=os.path.join(rootdir,'sqlfiles')
 predata=os.path.join(rootdir,'predata')
-
-
-#global variable for append sql when cbrand,cactive,croute
-datalist =[]
-sql_list = []
 dt = datetime.now()
-def direxist(dir):
-	if not os.path.exists(dir):
-		os.makedirs(dir,mode=0o777)
+
+class UserDataGenerator():
+	def __init__(self, servnumber, config):
+		self.servnumber = servnumber
+		self.config = config	
+		# global store
+		self.init_dict = {}
+		self.sql_list = []
+
+	def direxist(self,dir):
+		# 目录创建
+		if not os.path.exists(dir):
+			os.makedirs(dir,mode=0o777)
+
+	def getinfo(self,servnumber):
+		"""获取用户基本信息
+		:param servnumber:
+		:return:()
+		"""
+		info = namedtuple('subs',['servnumber','subsid','acctid','custid','region','brand','active','route','nodeid'])
+		sql1 = "select servnumber,subsid,acctid,custid,region,brand from hsc_subs_subscriber where servnumber=%s;" % (servnumber)
+		sql2 = "select active from hsc_active_additional where servnumber=%s;"% (servnumber)
+		sql3 = "select nodeid from hsc_route_nbr where servnumber=%s;"% (servnumber)
+		sql4 = "select decode(count(1),0,'False','True') from hsc_route_node where begino>=%s and endno <=%s;"% (servnumber)
+		# 
+		servnumber = None
+		subsid  = None
+		acctid  = None
+		custid  = None
+		region  = 200 if True else 759
+		brand  = None
+		active  = None
+		route  = None
+		nodeid  = None
+		subs = info(servnumber，subsid，acctid，custid，region，brand，active，route，nodeid)
+		# 加载到全局变量
+		self.init_dict['servnumber']=subs.servnumber
+		self.init_dict['subsid']=subs.subsid
+		self.init_dict['acctid']=subs.acctid
+		self.init_dict['custid']=subs.custid
+		self.init_dict['region']=subs.region
+		self.init_dict['brand']=subs.brand
+		self.init_dict['active']=subs.active
+		self.init_dict['route']=subs.route
+		self.init_dict['nodeid']=subs.nodeid
+		return subs
+		
+
+	def replace_dict(self,cfgfile='GlobalSettings.ini'):
+		"""
+		从ini文件获取所有变量保存到全局字典
+		:param cfgfile:
+		:return:
+		"""
+		cfg = ConfigParser()
+		cfg.read(cfgfile,encoding='utf-8')
+		seclist = [sec for sec in cfg.sections()]
+		for sec in seclist:
+			for col in cfg[sec]:
+				if self.init_dict[col]:
+					# 已加载变量不重复加载
+					continue
+				self.init_dict[col] = cfg[sec][col]
+				# pprint(self.init_dict)
+		return self.init_dict
+
+	def mfdate(self,inidate,mode=1):
+		# 读取ini中的datetime对象进行格式化
+		if mode == 1:
+			statement='(%s).' % (inidate)+'strftime("%Y-%m-%d %H:%M:%S")'
+		elif mode ==2:
+			statement='(%s).' % (inidate)+'strftime("%Y%m%d%H%M%S")'
+		elif mode ==3:
+			statement='(%s).' % (inidate)+'strftime("%Y-%m-%d")'
+		elif mode ==4:
+			statement='(%s).' % (inidate)+'strftime("%Y%m00")'
+		return eval(statement)
+
+	def selfclean(self):
+		#清理表，通用清理方案
+		jdata = self.readcfg(cfg='clean_Common_0001.json')
+		u = self.cfgparser(jdata)
+		for tbdsql,DbDriver in u:
+			print(f"DbDriver={DbDriver},tbdsql={tbdsql}")
+			sql = self.replacer(tbdsql,**self.init_dict)
+			self.sql_list.append((sql,DbDriver))
+
+	def cbrand(self,brand):
+		if brand.upper()=='SZX':
+			#加载预付费专属配置ABM_BILL_DAY等等
+			szx_dict = {'billtime':dt.strftime("%Y%m%d"),
+						'billday':dt.strftime("%Y%m%d"),
+						'nextbillday':lunar.lunar(dt).nextbillday,
+						'billcycle':dt.strftime("%Y%m00")}
+			# sql数据列
+			jdata = self.readcfg(cfg='base_BrandSzx_0001.json')
+			u = self.cfgparser(jdata)
+			for tbdsql,DbDriver in u:
+				print(f"DbDriver={DbDriver},tbdsql={tbdsql}")
+				sql = self.replacer(tbdsql,**szx_dict)
+				self.sql_list.append((sql,DbDriver))
+		elif brand.upper()=='GT':
+			pass
+		else:
+			print("May be wrong with cfgfiles.")
 
 
-
-def replace_dict(cfgfile):
-	"""
-	Get the Variables configfiles for initial.
-	:param cfgfile:
-	:return:
-	"""
-	init_dict = {}
-	list_key = []
-	cfg = ConfigParser()
-	cfg.read(cfgfile)
-	seclist = [sec for sec in cfg.sections()]
-	for sec in seclist:
-		for col in cfg[sec]:
-			list_key.append(col)
-			init_dict[col] = cfg[sec][col]
-			# pprint(init_dict)
-	return init_dict
-
-def mfdate(inidate,mode=1):
-	# 读取ini中的datetime对象进行格式化
-    if mode == 1:
-        statement='(%s).' % (inidate)+'strftime("%Y-%m-%d %H:%M:%S")'
-    elif mode ==2:
-        statement='(%s).' % (inidate)+'strftime("%Y%m%d%H%M%S")'
-    return eval(statement)
+	def cactive(self,active):
+		# 调用sqlplus查询，或者直接给定状态
+		if active is True:
+			#加载激活专属配置
+			act_dict = {'active':1}
+			# sql数据列
+			jdata = self.readcfg(cfg='active_BrandSzx_0001.json')
+			u = self.cfgparser(jdata)
+			for tbdsql,DbDriver in u:
+				print(f"DbDriver={DbDriver},tbdsql={tbdsql}")
+				sql = self.replacer(tbdsql,**act_dict)
+				self.sql_list.append((sql,DbDriver))
+		elif active is False:
+			pass
+		else:
+			print("May be wrong with cfgfiles.")
 
 
-def init_dict():
-	# 初始化替换变量
-	var_dict = {'servnumber':args.servnumber,
-				'subsid':'100'+args.servnumber,
-				'acctid':'100'+args.servnumber,
-				'custid':'100'+args.servnumber,
-				'subsprodid':args.servnumber+'01',
-				'statusdate':dt.strftime("%Y%m%d"),
-				'region':args.cfg,
-				'lifestatedate':dt.strftime("%Y%m%d"),
-				'prolongstartdate':dt.strftime("%Y%m%d"),
-				'changedate':dt.strftime("%Y%m%d")
-				}
-	return var_dict
+	def croute(self,route):
+		# 调用sqlplus查询，或者直接给定状态
+		if route is True:
+			#加载路由专属配置
+			r_dict = {'nodeid':2522}
+			# sql数据列
+			jdata = self.readcfg(cfg='route_BrandSzx_0001.json')
+			u = self.cfgparser(jdata)
+			for tbdsql,DbDriver in u:
+				print(f"DbDriver={DbDriver},tbdsql={tbdsql}")
+				sql = self.replacer(tbdsql,**r_dict)
+				self.sql_list.append((sql,DbDriver))
+		elif route is False:
+			pass
+		else:
+			print("May be wrong with cfgfiles.")
 
-def selfclean(table,wh=None):
-	#清理表，条件待定
+	def busidata(self,cfg='base_prod206_0001'):
+		# 选择业务数据生成
+		jdata = self.readcfg(cfg)
+		u = self.cfgparser(jdata)
+		for tbdsql,DbDriver in u:
+			print(f"DbDriver={DbDriver},tbdsql={tbdsql}")
+			sql = self.replacer(tbdsql,**self.init_dict)
+			self.sql_list.append((sql,DbDriver))
+	def readcfg(self,cfg):
+		#读取单个配置
+		cfg = os.path.join(busidir,cfg)
+		with open(cfg,'r',encoding='utf-8') as f:
+			jdata=json.load(f)
+		#删除注释
+		del jdata['note']
+		return jdata
+
+
+	def cfgparser(self,jdata):
+		"""
+		加载业务配置
+		:param jdata:
+		:return:
+		"""
+		for k in jdata.keys():
+			DbDriver,Table,DML,BusiUniq = k.split(".")
+			sql = self.replacer(jdata[k],**{})
+			# print(sql,DbDriver)
+			yield sql,DbDriver
+
+
+	def replacer(self,tbdsql,**var_dict):
+		"""
+		:param tbd:sql model to be replace.
+		:param var_dict:matched variables for sql model.
+		:return:
+		"""
+		try:
+			sql = tbdsql.format(**var_dict)
+			return sql
+		except ValueError as e:
+			print(e)
+			print("通常来说，你可能输错值了。")
+
+	def generator(self,sql,DbDriver='oracle'):
+		"""
+		DbDriver,tbdsql in cfgparser(jdata)
+		:param sql:
+		:param DbDriver:
+		:return:
+		"""
+		os.makedirs(self.servnumber)
+		with open(os.path.join(sqlfdir,self.servnumber,'%s_%s.sql' % (DbDriver,self.servnumber)),'a',encoding='utf-8') as f:
+			f.write(sql)
+			f.write("\n")
+		print("记录追加:%s_%s.sql" % (DbDriver,self.servnumber))
+
+	def sqlexecutor(self):
+		#执行对应号码下的所有脚本
+		pass
+	def process(self):
+		# 目录结构完整
+		self.direxist(busidir)
+		self.direxist(sqlfdir)
+		self.direxist(predata)
+		# 获取用户现存资料
+		subs=self.getinfo(self.servnumber)
+		# 品牌判断
+		self.cbrand(subs.brand)
+		# 是否激活
+		self.cactive(subs.active)
+		# 是否有路由信息
+		self.croute(subs.route)
+		# 加载全局变量
+		self.replace_dict()
+		# 数据清理
+		self.selfclean()
+		# 业务数据
+		self.busidata()
+		# 生成sql文件
+		self.generator(self.sql_list)
+		# sql执行器
+		self.sqlexecutor()
+
+def main():
+	# test
 	pass
-
-
-def cbrand(brand=args.brand):
-	if brand.upper()=='SZX':
-		#加载预付费专属配置ABM_BILL_DAY等等
-		szx_dict = {'billtime':dt.strftime("%Y%m%d"),
-					'billday':dt.strftime("%Y%m%d"),
-					'nextbillday':lunar.lunar(dt).nextbillday,
-					'billcycle':dt.strftime("%Y%m00")}
-		# sql数据列
-		jdata = readcfg(cfg='base_BrandSzx_0001.json')
-		u = cfgparser(jdata)
-		for tbdsql,DbDriver in u:
-			print(f"DbDriver={DbDriver},tbdsql={tbdsql}")
-			sql = replacer(tbdsql,**szx_dict)
-			sql_list.append((sql,DbDriver))
-	elif brand.upper()=='GT':
-		pass
-	else:
-		print("May be wrong with cfgfiles.")
-
-
-def cactive(active=args.active):
-	# 调用sqlplus查询，或者直接给定状态
-	if active is True:
-		#加载激活专属配置
-		act_dict = {'billtime':dt.strftime("%Y%m%d"),
-					'billday':dt.strftime("%Y%m%d"),
-					'nextbillday':lunar.lunar(dt).nextbillday,
-					'billcycle':dt.strftime("%Y%m00")}
-		# sql数据列
-		jdata = readcfg(cfg='active_BrandSzx_0001.json')
-		u = cfgparser(jdata)
-		for tbdsql,DbDriver in u:
-			print(f"DbDriver={DbDriver},tbdsql={tbdsql}")
-			sql = replacer(tbdsql,**act_dict)
-			sql_list.append((sql,DbDriver))
-	elif active is False:
-		pass
-	else:
-		print("May be wrong with cfgfiles.")
-
-
-def croute(route=args.route):
-	# 调用sqlplus查询，或者直接给定状态
-	if route is True:
-		#加载路由专属配置
-		r_dict = {'billtime':dt.strftime("%Y%m%d"),
-					'billday':dt.strftime("%Y%m%d"),
-					'nextbillday':lunar.lunar(dt).nextbillday,
-					'billcycle':dt.strftime("%Y%m00")}
-		# sql数据列
-		jdata = readcfg(cfg='route_BrandSzx_0001.json')
-		u = cfgparser(jdata)
-		for tbdsql,DbDriver in u:
-			print(f"DbDriver={DbDriver},tbdsql={tbdsql}")
-			sql = replacer(tbdsql,**r_dict)
-			sql_list.append((sql,DbDriver))
-	elif route is False:
-		pass
-	else:
-		print("May be wrong with cfgfiles.")
-
-def readcfg(cfg=args.cfg):
-	#判断是否列表
-	
-	#读取单个配置
-	cfg = os.path.join(busidir,args.cfg)
-	with open(cfg,'r',encoding='utf-8') as f:
-		jdata=json.load(f)
-	#删除注释
-	del jdata['note']
-	return jdata
-
-
-def cfgparser(jdata):
-	"""
-	加载业务配置
-	:param jdata:
-	:return:
-	"""
-	for k in jdata.keys():
-		DbDriver,Table,DML,BusiUniq = k.split(".")
-		sql = replacer(jdata[k],**init_dict())
-		# print(sql,DbDriver)
-		yield sql,DbDriver
-
-
-def replacer(tbdsql,**var_dict):
-	"""
-	:param tbd:sql model to be replace.
-	:param var_dict:matched variables for sql model.
-	:return:
-	"""
-	try:
-		sql = tbdsql.format(**var_dict)
-		return sql
-	except ValueError as e:
-		print(e)
-		print("通常来说，你可能输错值了。")
-
-def generator(sql,DbDriver='oracle'):
-	"""
-	DbDriver,tbdsql in cfgparser(jdata
-	:param sql:
-	:param DbDriver:
-	:return:
-	"""
-	with open(os.path.join(sqlfdir,'%s_%s.sql' % (DbDriver,args.servnumber)),'a',encoding='utf-8') as f:
-		f.write(sql)
-		f.write("\n")
-	print(f"记录追加:{DbDriver}_{args.servnumber}.sql")
 
 if __name__ == '__main__':
-	pass
+	main()
