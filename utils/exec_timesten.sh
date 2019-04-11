@@ -1,7 +1,7 @@
 #!/bin/bash
 #shell调用timesten执行sql语句
 currentDir=`pwd`
-logdir=$(currendDir)/log
+logdir=${currentDir}/log
 MemSQLFile=$1
 DbConnectStr=$2
 shellName=`basename $0`
@@ -24,7 +24,7 @@ then
     exit 1
 fi
 
-sqlName=`echo  "${MemSQLFile}" | awk -F"/"'{print $NF}'`
+sqlName=`echo  "${MemSQLFile}" | awk -F"/" '{print $NF}'`
 
 tmpSqlLog="${logdir}/${sqlName}.log"
 
