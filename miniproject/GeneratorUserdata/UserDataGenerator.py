@@ -21,9 +21,8 @@ predata=os.path.join(rootdir,'predata')
 dt = datetime.now()
 
 class UserDataGenerator():
-	def __init__(self, servnumber, config):
-		self.servnumber = servnumber
-		self.config = config	
+	def __init__(self, servnumber):
+		self.servnumber = str(servnumber)
 		# global store
 		self.init_dict = {}
 		self.sql_list = []
@@ -42,18 +41,17 @@ class UserDataGenerator():
 		sql1 = "select servnumber,subsid,acctid,custid,region,brand from hsc_subs_subscriber where servnumber=%s;" % (servnumber)
 		sql2 = "select active from hsc_active_additional where servnumber=%s;"% (servnumber)
 		sql3 = "select nodeid from hsc_route_nbr where servnumber=%s;"% (servnumber)
-		sql4 = "select decode(count(1),0,'False','True') from hsc_route_node where begino>=%s and endno <=%s;"% (servnumber)
-		# 
-		servnumber = None
-		subsid  = None
-		acctid  = None
-		custid  = None
+		sql4 = "select decode(count(1),0,'False','True') from hsc_route_node where begino>=%s and endno <=%s;"% (servnumber,servnumber)
+		# 查询结果
+		subsid  = '100'+servnumber
+		acctid  =  '101'+servnumber
+		custid  =  '102'+servnumber
 		region  = 200 if True else 759
-		brand  = None
-		active  = None
-		route  = None
-		nodeid  = None
-		subs = info(servnumber，subsid，acctid，custid，region，brand，active，route，nodeid)
+		brand  = 'BrandSzx'
+		active  = True
+		route  = True
+		nodeid  = 2522
+		subs = info(servnumber,subsid,acctid,custid,region,brand,active,route,nodeid)
 		# 加载到全局变量
 		self.init_dict['servnumber']=subs.servnumber
 		self.init_dict['subsid']=subs.subsid
@@ -221,6 +219,7 @@ class UserDataGenerator():
 	def sqlexecutor(self):
 		#执行对应号码下的所有脚本
 		pass
+
 	def process(self):
 		# 目录结构完整
 		self.direxist(busidir)
@@ -247,7 +246,9 @@ class UserDataGenerator():
 
 def main():
 	# test
-	pass
+	servnumber=13502400909
+	tester=UserDataGenerator(servnumber)
+	tester.process()
 
 if __name__ == '__main__':
 	main()
