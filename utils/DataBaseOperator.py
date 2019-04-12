@@ -2,18 +2,19 @@
 #-*- coding :utf-8 -*-
 #@author :cangyunye
 #@email :cangyunye@gmail.com
+#version:WIP
 from subprocess import Popen,PIPE
 import re
 from time import sleep
-"""
-后续考虑，直接继承Popen，然后改写方法
-"""
+
 class DataBaseOperator():
+
 	def __init__(self, user, passwd,host,db='oracle'):
 		self.user = user
 		self.passwd = passwd
 		self.host = host
 		self.db = db
+		# return self
 	
 	@property
 	def sqlstr(self):
@@ -21,6 +22,8 @@ class DataBaseOperator():
 		
 	@sqlstr.setter
 	def sqlstr(self,value):
+		if not instance(value,str):
+			raise TypeError('Expected a string.')
 		self._sqlstr=value
 	
 	def __enter__(self):
@@ -30,7 +33,7 @@ class DataBaseOperator():
 			self.server=self.timestenserver()
 		elif self.db == 'mysql':
 			self.server=self.mysqlserver()
-		return self.server
+		return self
 
 	def __exit__(self, exc_type, exc_val, exc_tb):
 		self.close()
@@ -118,5 +121,5 @@ class DataBaseOperator():
 
 if __name__ == "__main__":
 	with DataBaseOperator('yunye','yunye','ora','oracle') as DB:
-		text=DB.stdin.write('select 1+1 from dual;')
+		text=DB.run('select 1 from dual;')
 	print(text)
