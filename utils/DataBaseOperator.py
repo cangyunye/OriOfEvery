@@ -3,7 +3,7 @@
 # @author :cangyunye
 # @email :cangyunye@gmail.com
 # version:1.0
-from subprocess import Popen, PIPE
+from subprocess import Popen, PIPE,check_output,run
 import re
 """
 小结：
@@ -56,14 +56,14 @@ class DataBaseOperator():
 
 	def runscript(self, script):
 		if self.db == 'oracle':
-			p = Popen('sqlplus -s %s/%s@%s @%s' % (self.user, self.passwd,
-												   self.host, script), shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE)
+			run('sqlplus -s %s/%s@%s @%s' % (self.user, self.passwd,
+												   self.host, script), shell=True, stdin=PIPE,check=True)
 		elif self.db == 'timesten':
-			p = Popen('ttIsqlCS -connStr "dsn=%s;uid=%s;pwd=%s" -f %s' % (self.host, self.user,
-																		  self.passwd, script), shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE)
+			run('ttIsqlCS -connStr "dsn=%s;uid=%s;pwd=%s" -f %s' % (self.host, self.user,
+																		  self.passwd, script), shell=True, stdin=PIPE,check=True)
 		elif self.db == 'mysql':
-			p = Popen('mysql -u%s -p%s -h%s < %s' % (self.user, self.passwd,
-													 self.host, script), shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE)
+			run('mysql -u%s -p%s -h%s < %s' % (self.user, self.passwd,
+													 self.host, script), shell=True, stdin=PIPE,check=True)
 		else:
 			raise NotImplementedError("%s not exist!" % (self.db))
 
@@ -77,7 +77,7 @@ class DataBaseOperator():
 		else:
 			raise NameError("DB not exist!")
 		self.Pin.stdin.write(sql.encode('ascii')+b'\n')
-		(stdout, stderr) = self.Pin.communicate()
+		stdout= self.Pin.communicate()[0]
 		assert self.Pin.returncode == 0, 'Popen cmd failed.'
 		return stdout
 
