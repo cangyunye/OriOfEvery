@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 import argparse
 import textwrap
-from UserDataGenerator import UserDataGenerator
+from .UserDataGenerator import UserDataGenerator
 
 
 __description__ = textwrap.dedent('''\
@@ -45,10 +45,12 @@ args = parser.parse_args()
 
 
 def main():
-    print(args.brand)
-    print(args.active)
-    print(args.route)
-    print(args.cfg)
-	print(args.env)
+	g=UserDataGenerator(args.servnumber)
+	g.process()
+	# print(args.brand)
+	# print(args.active)
+	# print(args.route)
+	# print(args.cfg)
+	# print(args.env)
 if __name__ == "__main__":
-    main()
+	main()
