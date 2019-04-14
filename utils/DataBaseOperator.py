@@ -1,125 +1,109 @@
-#/usr/bin/python3
-#-*- coding :utf-8 -*-
-#@author :cangyunye
-#@email :cangyunye@gmail.com
-#version:WIP
-from subprocess import Popen,PIPE
+# /usr/bin/python3
+# -*- coding :utf-8 -*-
+# @author :cangyunye
+# @email :cangyunye@gmail.com
+# version:1.0
+from subprocess import Popen, PIPE
 import re
-from time import sleep
-
+"""
+小结：
+1.使用communicate会直接关闭stdin，管道无法设计连续的sql语句在dbdriver中输入
+2.如果要将Pin作为with语句输入，实现with内作为一次session模拟连续性输入
+参考1不可行，但可采取特别方案，将communicate作为结尾，只调用一次，中间循环接受stdin.write
+每次stdin.write必须存在一个用于区分每次
+"""
 class DataBaseOperator():
-
-	def __init__(self, user, passwd,host,db='oracle'):
+	def __init__(self, user, passwd, host, db='oracle'):
 		self.user = user
 		self.passwd = passwd
 		self.host = host
 		self.db = db
-		# return self
-	
-	@property
-	def sqlstr(self):
-		return self._sqlstr
-		
-	@sqlstr.setter
-	def sqlstr(self,value):
-		if not instance(value,str):
-			raise TypeError('Expected a string.')
-		self._sqlstr=value
-	
-	def __enter__(self):
-		if self.db=='oracle':
-			self.server=self.oracleserver()
-		elif self.db =='timesten':
-			self.server=self.timestenserver()
-		elif self.db == 'mysql':
-			self.server=self.mysqlserver()
-		return self
+		self.Pin = None
 
-	def __exit__(self, exc_type, exc_val, exc_tb):
-		self.close()
-
-	def close(self):
-		if self.db=='oracle':
-			close=b'quit\n'
-		elif self.db =='timesten':
-			close=b'quit\n'
-		elif self.db == 'mysql':
-			close=b'quit\n'
-		self.server.stdin.write(close)
-	
-	def oracleserver(self):
+	def _oraclePin(self):
 		try:
-			server = Popen('sqlplus -s %s/%s@%s'%(self.user,self.passwd,self.host),shell=True,stdin=PIPE,stdout=PIPE,stderr=PIPE)
 			initset = """set head off;
 			set linesize 5000;
 			set pagesize 0;
 			set colsep '|';
 			set numwidth 15"""
-			server.stdin.write(initset.encode('ascii')+b'\n')
-			return server
+			conn = 'sqlplus -s %s/%s@%s' % (self.user, self.passwd, self.host)
+			Pin = Popen(conn, shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE)
+			Pin.stdin.write(initset.encode('ascii')+b'\n')
+			return Pin
 		except Exception as e:
 			print(e)
 
-	def timestenserver(self):
+	def _timestenPin(self):
 		try:
-			conn = 'ttIsqlCS -connStr "dsn=%s;uid=%s;pwd=%s" -v 1'%(self.host,self.user,self.passwd)
-			server = Popen(conn,shell=True,stdin=PIPE,stdout=PIPE,stderr=PIPE)
-			return server
+			conn = 'ttIsqlCS -v 1 -connStr "dsn=%s;uid=%s;pwd=%s" ' % (
+				self.host, self.user, self.passwd)
+			Pin = Popen(conn, shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE)
+			return Pin
 		except Exception as e:
 			print(e)
 
-	def mysqlserver(self):
+	def _mysqlPin(self):
 		try:
-			conn = 'mysql -u%s -p%s -h%s -B'%(self.user,self.passwd,self.host)
+			conn = 'mysql -u%s -p%s -h%s -B' % (self.user,
+												self.passwd, self.host)
 			# conn = 'mysql -u%s -p%s -h%s -s'%(self.user,self.passwd,self.host)
-			server = Popen(conn,shell=True,stdin=PIPE,stdout=PIPE,stderr=PIPE)
-			return server
+			print(conn)
+			Pin = Popen(conn, shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE)
+			return Pin
 		except Exception as e:
 			print(e)
 
-	def runscript(self,script):
-		if self.db=='oracle':
-			p=Popen('sqlplus -s %s/%s@%s @%s'%(self.user,self.passwd,self.host,script),shell=True,stdin=PIPE,stdout=PIPE,stderr=PIPE)
-		elif self.db =='timesten':
-			p=Popen('ttIsqlCS -connStr "dsn=%s;uid=%s;pwd=%s" -f %s'%(self.host,self.user,self.passwd,script),shell=True,stdin=PIPE,stdout=PIPE,stderr=PIPE)
+	def runscript(self, script):
+		if self.db == 'oracle':
+			p = Popen('sqlplus -s %s/%s@%s @%s' % (self.user, self.passwd,
+												   self.host, script), shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE)
+		elif self.db == 'timesten':
+			p = Popen('ttIsqlCS -connStr "dsn=%s;uid=%s;pwd=%s" -f %s' % (self.host, self.user,
+																		  self.passwd, script), shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE)
 		elif self.db == 'mysql':
-			p=Popen('mysql -u%s -p%s -h%s < %s'%(self.user,self.passwd,self.host,script),shell=True,stdin=PIPE,stdout=PIPE,stderr=PIPE)
+			p = Popen('mysql -u%s -p%s -h%s < %s' % (self.user, self.passwd,
+													 self.host, script), shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE)
 		else:
-			raise NotImplementedError("%s not exist!"%(self.db))
+			raise NotImplementedError("%s not exist!" % (self.db))
 
-	def run(self,sql=None,server=None):
-		if self._sqlstr:
-			sql=self._sqlstr
-		if self.server:
-			server=self.server
-		while True:
-			if sql:
-				try:
-					server.stdin.write(sql.encode('ascii')+b'\n')
-					(stdout,stderr)=server.communicate()
-					yield stdout
-				except Exception as e:
-					print(e)
-			elif sql in ['exit','quit','bye']:
-				self.close()
-			else:
-				sleep(1)
+	def run(self, sql):
+		if self.db == 'oracle':
+			self.Pin = self._oraclePin()
+		elif self.db == 'timesten':
+			self.Pin = self._timestenPin()
+		elif self.db == 'mysql':
+			self.Pin = self._mysqlPin()
+		else:
+			raise NameError("DB not exist!")
+		self.Pin.stdin.write(sql.encode('ascii')+b'\n')
+		(stdout, stderr) = self.Pin.communicate()
+		assert self.Pin.returncode == 0, 'Popen cmd failed.'
+		return stdout
 
-	def output(self,stdout,decode='utf-8'):
-		text=stdout.decode(decode)
-		if self.db=='oracle':
+	def output(self, stdout, decode='utf-8'):
+		text = stdout.decode(decode)
+		if self.db == 'oracle':
 			pattern = re.compile(r'\s')
-			output=re.sub(pattern,"",text,re.ASCII).split('|')
-		elif self.db =='timesten':
+			output = re.sub(pattern, "", text, re.ASCII).split('|')
+		elif self.db == 'timesten':
 			pattern = re.compile(r'\s|<|>')
-			output=re.sub(pattern,"",text,re.ASCII).split(',')
+			output = re.sub(pattern, "", text, re.ASCII).split(',')
 		elif self.db == 'mysql':
-			output=re.split("\t",text)
+			pattern = re.compile(r'\r|\n')
+			output = re.sub(pattern, "", text, re.ASCII).split('\t')
 		else:
-			raise NotImplementedError("%s not exist!"%(self.db))
+			raise NotImplementedError("%s not exist!" % (self.db))
 		return output
 
+
+def main():
+	DB = DataBaseOperator('root', 'ppppp', '127.0.0.1', 'mysql')
+	sql = 'select * from sakila.film  limit 0,5;'
+	r = DB.run(sql)
+	print(r.decode('utf-8'))
+	o = DB.output(r)
+	print(o)
 if __name__ == "__main__":
-	with DataBaseOperator('yunye','yunye','ora','oracle') as DB:
-		text=DB.run('select 1 from dual;')
-	print(text)
+	main()
+
