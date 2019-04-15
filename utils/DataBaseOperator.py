@@ -47,9 +47,10 @@ class DataBaseOperator():
 		try:
 			conn = 'mysql -u%s -p%s -h%s -B' % (self.user,
 												self.passwd, self.host)
-			# conn = 'mysql -u%s -p%s -h%s -s'%(self.user,self.passwd,self.host)
+			# conn = 'mysql -u%s -p%s -h%s -s -N'%(self.user,self.passwd,self.host)
 			print(conn)
 			Pin = Popen(conn, shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE)
+			# print(Pin.stdout.readline().decode('utf-8'))
 			return Pin
 		except Exception as e:
 			print(e)
@@ -85,25 +86,53 @@ class DataBaseOperator():
 		text = stdout.decode(decode)
 		if self.db == 'oracle':
 			pattern = re.compile(r'\s')
-			output = re.sub(pattern, "", text, re.ASCII).split('|')
+			output = re.sub(pattern, "", text).split('|')
+			row = len(text.split('\n'))
+			col = len(text.split('\n')[0].split('|'))
 		elif self.db == 'timesten':
 			pattern = re.compile(r'\s|<|>')
-			output = re.sub(pattern, "", text, re.ASCII).split(',')
+			output = re.sub(pattern, "", text).split(',')
+			row = len(text.split('\n'))
+			col = len(text.split('\n')[0].split(','))
 		elif self.db == 'mysql':
-			pattern = re.compile(r'\r|\n')
-			output = re.sub(pattern, "", text, re.ASCII).split('\t')
+			output = re.sub(r'\n', "\t", text)
+			output = re.sub(r'\r', "", output).split('\t')
+			row = len(text.split('\n'))
+			col = len(text.split('\n')[0].split('\t'))
 		else:
 			raise NotImplementedError("%s not exist!" % (self.db))
-		return output
+		return output,row,col
 
 
 def main():
-	DB = DataBaseOperator('root', 'ppppp', '127.0.0.1', 'mysql')
-	sql = 'select * from sakila.film  limit 0,5;'
-	r = DB.run(sql)
-	print(r.decode('utf-8'))
-	o = DB.output(r)
-	print(o)
+	# 测试
+	DB = DataBaseOperator('xiaoying', 'wy123', '127.0.0.1', 'mysql')
+	sql = 'select * from mysql.db;'
+	# sql = 'select * from sakila.film  limit 0,5;'
+	ret = DB.run(sql)
+
+	print(ret.decode('utf-8'))
+
+	r2c = ret.decode('utf-8').split('\n')
+	print("分行为列",r2c)
+	from collections import namedtuple
+	col_d = {}
+	del r2c[-1]
+	for i in range(len(r2c)):
+		if i==0:
+			column = namedtuple('col', r2c[0].split('\t'))
+			continue
+		col_d[i] = column._make(r2c[i].split('\t'))
+	print(col_d)
+
+	for line in r2c:
+		print(line)
+	o,r,c = DB.output(ret)
+	print("行数:",r,"列数",c,"\n输出：",o)
+	for line in range(r):
+		print(f"第{line+1}行：",line*c,(line+1)*c)
+		print(o[line*c:(line+1)*c])
+
 if __name__ == "__main__":
 	main()
 
