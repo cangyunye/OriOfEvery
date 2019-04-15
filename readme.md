@@ -1,26 +1,35 @@
 # 学习笔记库内容涉及整理
 
-> 后续补充使用库及标题
+> 个人的持续学习笔记仓库
+>
+> 主要内容为学习python过程产生的demo
 
-## Air-AQI
+## miniproject
 
-AQI空气质量爬取
+本目录用于开发微型工程
 
-## AirQualityCalCode
-
-空气质量计算
+1. Air-AQI，空气质量爬取
+2. AirQualityCalCode，空气质量计算
+3. bcy，半次元无水印爬虫
+4. html2pdf，廖雪峰教学网站crawler
+5. fangtianxia，房天下crawler
+6. filechecker，文件校验器
+7. GeneratorUserdata，用户sql数据生成器
+8. Proxiesget，免费代理爬取
+9. maoyan，猫眼top100爬取练习
+10. taskallot，任务分配均衡计算器
 
 ## asynciogo
 
-模块学习
+异步模块操作
 
 ## BeautifulSoupGo
 
-模块学习
+利用BeautifulSoup模块解析网页内容
 
 ## createnew
 
-实验室
+特别实验室
 
 ## DataProcess
 
