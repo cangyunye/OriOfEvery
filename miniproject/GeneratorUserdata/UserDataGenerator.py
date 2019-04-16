@@ -6,9 +6,9 @@ import os
 import json
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
-from utils import lunar
+from utils import lunar,DataBaseOperator
 from configparser import ConfigParser
-from collections import namedtuple
+from collections import namedtuple,defaultdict
 
 #init
 __brand__=["BrandSzx","BrandGotone"]
@@ -24,7 +24,7 @@ class UserDataGenerator():
 	def __init__(self, servnumber):
 		self.servnumber = str(servnumber)
 		# global store
-		self.init_dict = {}
+		self.init_dict = defaultdict(lambda:None)
 		self.sql_list = []
 
 	def direxist(self,dir):
@@ -37,12 +37,37 @@ class UserDataGenerator():
 		:param servnumber:
 		:return:()
 		"""
-		info = namedtuple('subs',['servnumber','subsid','acctid','custid','region','brand','active','route','nodeid'])
-		sql1 = "select servnumber,subsid,acctid,custid,region,brand from hsc_subs_subscriber where servnumber=%s;" % (servnumber)
-		sql2 = "select active from hsc_active_additional where servnumber=%s;"% (servnumber)
-		sql3 = "select nodeid from hsc_route_nbr where servnumber=%s;"% (servnumber)
-		sql4 = "select decode(count(1),0,'False','True') from hsc_route_node where begino>=%s and endno <=%s;"% (servnumber,servnumber)
-		# 查询结果
+		DBO = DataBaseOperator('root', 'passwd', '127.0.0.1', 'oracle')
+		DBT = DataBaseOperator('root', 'passwd', '127.0.0.1', 'timesten')
+		retf = []
+		subs_info = namedtuple('subs',['servnumber','subsid','acctid','custid','region','brand','active','route','nodeid'])
+		subs_sql = "select servnumber,subsid,acctid,custid,region,brand from hsc_subs_subscriber where servnumber=%s;" % (servnumber)
+		# 返回二进制结果
+		ret = DBT.run(subs_sql)
+		if ret :
+			# 二进制解码与格式调整
+			retf +=DBT.output(ret)
+		else:
+			retf +=['None']*6
+
+		active_sql = "select active from hsc_subs_active where subsid=%s;"% (retf[1])
+		ret = DBT.run(active_sql)
+		if ret :
+			retf +=DBT.output(ret)
+		else:
+			retf +=['None']
+
+		route_sql = "select nodeid from hsc_route_nbr where servnumber=%s;"% (servnumber)
+		ret = DBO.run(route_sql)
+
+		if ret :
+			retf +=DBO.output(ret)
+		else:
+			retf +=['None']
+
+		# sql4 = "select decode(count(1),0,'False','True') from hsc_route_node where beginno>=%s and endnno <=%s;"% (servnumber,servnumber)
+	
+		"""查询结果桩模拟
 		subsid  = '100'+servnumber
 		acctid  =  '101'+servnumber
 		custid  =  '102'+servnumber
@@ -50,8 +75,11 @@ class UserDataGenerator():
 		brand  = 'BrandSzx'
 		active  = True
 		route  = True
-		nodeid  = 2522
-		subs = info(servnumber,subsid,acctid,custid,region,brand,active,route,nodeid)
+		nodeid  = 2522"""
+		# map(info._make, cursor.fetchall())
+		# subs = info(servnumber,subsid,acctid,custid,region,brand,active,route,nodeid)
+		# subs = subs_info._make(retf)
+		subs = subs_info(retf)
 		# 加载到全局变量
 		self.init_dict['servnumber']=subs.servnumber
 		self.init_dict['subsid']=subs.subsid
@@ -62,6 +90,7 @@ class UserDataGenerator():
 		self.init_dict['active']=subs.active
 		self.init_dict['route']=subs.route
 		self.init_dict['nodeid']=subs.nodeid
+		
 		return subs
 		
 
@@ -109,7 +138,7 @@ class UserDataGenerator():
 			#加载预付费专属配置ABM_BILL_DAY等等
 			szx_dict = {'billtime':dt.strftime("%Y%m%d"),
 						'billday':dt.strftime("%Y%m%d"),
-						'nextbillday':lunar.lunar(dt).nextbillday,
+						'nextbillday':lunar(dt).nextbillday,
 						'billcycle':dt.strftime("%Y%m00")}
 			# sql数据列
 			jdata = self.readcfg(cfg='base_BrandSzx_0001.json')
@@ -184,7 +213,8 @@ class UserDataGenerator():
 		:return:
 		"""
 		for k in jdata.keys():
-			DbDriver,Table,DML,BusiUniq = k.split(".")
+			# DbDriver,Table,DML,BusiUniq = k.split(".")
+			DbDriver = k.split(".")[0]
 			sql = self.replacer(jdata[k],**{})
 			# print(sql,DbDriver)
 			yield sql,DbDriver

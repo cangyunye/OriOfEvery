@@ -8,9 +8,6 @@ import re
 """
 小结：
 1.使用communicate会直接关闭stdin，管道无法设计连续的sql语句在dbdriver中输入
-2.如果要将Pin作为with语句输入，实现with内作为一次session模拟连续性输入
-参考1不可行，但可采取特别方案，将communicate作为结尾，只调用一次，中间循环接受stdin.write
-每次stdin.write必须存在一个用于区分每次
 """
 class DataBaseOperator():
 	def __init__(self, user, passwd, host, db='oracle'):
@@ -45,7 +42,7 @@ class DataBaseOperator():
 
 	def _mysqlPin(self):
 		try:
-			conn = 'mysql -u%s -p%s -h%s -B' % (self.user,
+			conn = 'mysql -u%s -p%s -h%s -B -N' % (self.user,
 												self.passwd, self.host)
 			# conn = 'mysql -u%s -p%s -h%s -s'%(self.user,self.passwd,self.host)
 			print(conn)
@@ -85,20 +82,20 @@ class DataBaseOperator():
 		text = stdout.decode(decode)
 		if self.db == 'oracle':
 			pattern = re.compile(r'\s')
-			output = re.sub(pattern, "", text, re.ASCII).split('|')
+			output = re.sub(pattern, "", text).split('|')
 		elif self.db == 'timesten':
 			pattern = re.compile(r'\s|<|>')
-			output = re.sub(pattern, "", text, re.ASCII).split(',')
+			output = re.sub(pattern, "", text).split(',')
 		elif self.db == 'mysql':
 			pattern = re.compile(r'\r|\n')
-			output = re.sub(pattern, "", text, re.ASCII).split('\t')
+			output = re.sub(pattern, "", text).split('\t')
 		else:
 			raise NotImplementedError("%s not exist!" % (self.db))
 		return output
 
 
 def main():
-	DB = DataBaseOperator('root', 'ppppp', '127.0.0.1', 'mysql')
+	DB = DataBaseOperator('yunye', 'passwd', '127.0.0.1', 'mysql')
 	sql = 'select * from sakila.film  limit 0,5;'
 	r = DB.run(sql)
 	print(r.decode('utf-8'))
