@@ -4,7 +4,7 @@
 >
 > 主要内容为学习python过程产生的demo
 
-## miniproject
+## 微工程miniproject
 
 本目录用于开发微型工程
 
@@ -19,147 +19,165 @@
 9. maoyan，猫眼top100爬取练习
 10. taskallot，任务分配均衡计算器
 
-## asynciogo
 
-异步模块操作
 
-## BeautifulSoupGo
+## 各类模块demo
 
-利用BeautifulSoup模块解析网页内容
+###  asyncio
 
-## createnew
+> asyncio 是用来编写 **并发** 代码的库，使用 **async/await** 语法。
+>
+> asyncio 被用作多个提供高性能 Python 异步框架的基础，包括网络和网站服务，数据库连接库，分布式任务队列等等。
+>
+> asyncio 往往是构建 IO 密集型和高层级 **结构化** 网络代码的最佳选择。
+
+<https://docs.python.org/zh-cn/3/library/asyncio.html>
+
+### BeautifulSoupGo
+
+[Beautiful Soup](http://www.crummy.com/software/BeautifulSoup/) 是一个可以从HTML或XML文件中提取数据的Python库
+
+<https://beautifulsoup.readthedocs.io/zh_CN/v4.4.0/>
+
+### createnew
 
 特别实验室
 
-## DataProcess
+### DataProcess
 
 数据处理模块
 
-### math
+#### math
 
-### numpy
+python的数学运算模块
 
-### pandas
+<https://docs.python.org/3/library/math.html>
 
-## hash
+#### numpy
 
-一些哈希操作方法应用
+科学计算基础包
 
-## MachineLearning
+<https://www.numpy.org/devdocs/user/quickstart.html>
+
+<http://www.runoob.com/numpy/numpy-tutorial.html>
+
+#### pandas
+
+数据分析处理包
+
+<https://pandas.pydata.org/>
+
+### MachineLearning
 
 机器学习模块
 
 房价预测
 
-### Keras
+#### Keras
 
-### Scikit-learn
+#### Scikit-learn
 
-### TensorFlow
+#### TensorFlow
 
-## matplotliblearning
+### matplotliblearning
 
 数据可视化
 
-## miniproject
-
-小工程
-
-##  Multiprocessinggo
+###  Multiprocessinggo
 
 多进程处理
 
-## psutil
+### psutil
 
 系统工具
 
-## pyQt5learning
+### pyQt5learning
 
 pyQt5Gui学习
 
-## PythonBasicLearning
+### PythonBasicLearning
 
 python基本学习模块
 
-### CycleandJudge
+#### CycleandJudge
 
 循环和判断
 
-### DataStore
+#### DataStore
 
 数据存储
 
-### DataStructure
+#### DataStructure
 
 数据结构
 
-### DateTime
+#### DateTime
 
 时间处理
 
-### Decorator
+#### Decorator
 
 装饰器
 
-### FileOperation
+#### FileOperation
 
 文件操作
 
-####  Exceloperator
+#####  Exceloperator
 
-#### Formatter
+##### Formatter
 
-#### JsonOperation
+##### JsonOperation
 
-#### OpenFile
+##### OpenFile
 
-#### xml
+##### xml
 
-### Function
+#### Function
 
 函数
 
-### Generator
+#### Generator
 
 生成器
 
-### OS
+#### OS
 
 系统操作模块
 
-### socketgo
+#### socketgo
 
 网络编程
 
-### String
+#### String
 
 字符串
 
-## Random
+### Random
 
 随机模块
 
-## RegularExpression
+### RegularExpression
 
 正则表达式
 
-## Selenium
+### Selenium
 
 浏览器模拟测试及自动化
 
-## Threadinggo
+### Threadinggo
 
 多线程处理
 
-## TurtlePaint
+### TurtlePaint
 
 海龟画图
 
-## unittest
+### unittest
 
 单元测试
 
-## utils
+### utils
 
 拓展工具
 
