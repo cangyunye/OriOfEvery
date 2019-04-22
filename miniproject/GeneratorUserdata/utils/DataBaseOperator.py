@@ -8,6 +8,9 @@ import re
 """
 小结：
 1.使用communicate会直接关闭stdin，管道无法设计连续的sql语句在dbdriver中输入
+2.在使用ssh user@hosts DataBaseOperator.py时，脚本调用失败，
+因为这个non-interactive non-shell 模式需要启动环境变量加载对应的调用程序
+保证ttisqlcs,sqlplus,mysql能够在环境变量中读取，或者直接配置.bashrc
 """
 class DataBaseOperator():
 	def __init__(self, user, passwd, host, db='oracle'):
@@ -82,6 +85,7 @@ class DataBaseOperator():
 		text = stdout.decode(decode)
 		if self.db == 'oracle':
 			pattern = re.compile(r'\s')
+			text = re.sub('no rows selected', "", text)
 			output = re.sub(pattern, "", text).split('|')
 		elif self.db == 'timesten':
 			pattern = re.compile(r'\s|<|>')

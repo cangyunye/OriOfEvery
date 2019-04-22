@@ -9,7 +9,8 @@ from dateutil.relativedelta import relativedelta
 from utils import lunar,DataBaseOperator
 from configparser import ConfigParser
 from collections import namedtuple,defaultdict
-
+from shutil import rmtree
+import logging
 #init
 __brand__=["BrandSzx","BrandGotone"]
 
@@ -26,6 +27,10 @@ class UserDataGenerator():
 		# global store
 		self.init_dict = defaultdict(lambda:None)
 		self.sql_list = []
+		# 目录结构完整
+		self.direxist(busidir)
+		self.direxist(sqlfdir)
+		self.direxist(predata)
 
 	def direxist(self,dir):
 		# 目录创建
@@ -37,49 +42,49 @@ class UserDataGenerator():
 		:param servnumber:
 		:return:()
 		"""
-		DBO = DataBaseOperator('root', 'passwd', '127.0.0.1', 'oracle')
-		DBT = DataBaseOperator('root', 'passwd', '127.0.0.1', 'timesten')
-		retf = []
-		subs_info = namedtuple('subs',['servnumber','subsid','acctid','custid','region','brand','active','route','nodeid'])
-		subs_sql = "select servnumber,subsid,acctid,custid,region,brand from hsc_subs_subscriber where servnumber=%s;" % (servnumber)
-		# 返回二进制结果
-		ret = DBT.run(subs_sql)
-		if ret :
-			# 二进制解码与格式调整
-			retf +=DBT.output(ret)
+		oracleconn = eval(self.init_dict['oracleconn'])
+		timestenconn = eval(self.init_dict['timestenconn'])
+		DBO = DataBaseOperator(*oracleconn)
+		DBT = DataBaseOperator(*timestenconn)
+		def ret(DB,sql):
+			dout = DB.output(DB.run(sql),decode='utf-8')
+			if dout[0]:
+				return dout
+			else:
+				return ['None']
+		# ret = lambda DB,sql:DB.output(DB.run(sql),decode='utf-8') if :DB.output(DB.run(sql),decode='utf-8')[0] else ['None']
+		subsl = []
+		subs_info = namedtuple('subs',['servnumber','subsid','acctid','custid','region','brand','active','nodeid'])
+		
+		# 用户基本信息
+		subs_sql = f"select servnumber,subsid,acctid,custid,region,brand from hsc_subs_subscriber where servnumber='{servnumber}';"
+		tmp00 = ret(DBT,subs_sql)
+		if  'None'  not in tmp00:
+			subsl += ret(DBT,subs_sql) + [self.init_dict['active'],self.init_dict['nodeid']]
 		else:
-			retf +=['None']*6
+			os._exit(0)
+		# 元组组装
+		subs = subs_info._make(subsl)
+		# map(subs_info._make, subsl)
 
-		active_sql = "select active from hsc_subs_active where subsid=%s;"% (retf[1])
-		ret = DBT.run(active_sql)
-		if ret :
-			retf +=DBT.output(ret)
+		# 用户激活信息
+		active_sql = f"select active from hsc_subs_additional where subsid=f{subs.subsid};"
+		tmp0 = ret(DBT,active_sql)[0]
+		if tmp0 != 'None':
+			subs = subs._replace(active=tmp0)
 		else:
-			retf +=['None']
+			print("There isn't active data.")
+		route1_sql = f"select data_nodeid from hsc_route_nbr where servnumber='{servnumber}';"
+		route2_sql = f"select nodeid from hsc_nosect_abmnode where beginno>={servnumber} and endno<={servnumber};"
+		tmp1 = ret(DBO,route1_sql)[0]
+		tmp2 = ret(DBO,route2_sql)[0]
 
-		route_sql = "select nodeid from hsc_route_nbr where servnumber=%s;"% (servnumber)
-		ret = DBO.run(route_sql)
-
-		if ret :
-			retf +=DBO.output(ret)
+		if tmp2 != 'None':
+			subs = subs._replace(nodeid=tmp2)
+		elif tmp1 != 'None':
+			subs = subs._replace(nodeid=tmp1)
 		else:
-			retf +=['None']
-
-		# sql4 = "select decode(count(1),0,'False','True') from hsc_route_node where beginno>=%s and endnno <=%s;"% (servnumber,servnumber)
-	
-		"""查询结果桩模拟
-		subsid  = '100'+servnumber
-		acctid  =  '101'+servnumber
-		custid  =  '102'+servnumber
-		region  = 200 if True else 759
-		brand  = 'BrandSzx'
-		active  = True
-		route  = True
-		nodeid  = 2522"""
-		# map(info._make, cursor.fetchall())
-		# subs = info(servnumber,subsid,acctid,custid,region,brand,active,route,nodeid)
-		# subs = subs_info._make(retf)
-		subs = subs_info(retf)
+			print("There isn't route data.")
 		# 加载到全局变量
 		self.init_dict['servnumber']=subs.servnumber
 		self.init_dict['subsid']=subs.subsid
@@ -88,9 +93,8 @@ class UserDataGenerator():
 		self.init_dict['region']=subs.region
 		self.init_dict['brand']=subs.brand
 		self.init_dict['active']=subs.active
-		self.init_dict['route']=subs.route
 		self.init_dict['nodeid']=subs.nodeid
-		
+		print(subs)
 		return subs
 		
 
@@ -102,18 +106,38 @@ class UserDataGenerator():
 		"""
 		cfg = ConfigParser()
 		cfg.read(cfgfile,encoding='utf-8')
-		seclist = [sec for sec in cfg.sections()]
-		for sec in seclist:
-			for col in cfg[sec]:
+
+		# 用户数据段
+		for col in cfg['sqlvar']:
+			if self.init_dict[col]:
+				continue
+			self.init_dict[col] = cfg['userdata'][col]
+		# eval解析段
+		for col in cfg['pyeval']:
+			if self.init_dict[col]:
+				continue
+			self.init_dict[col] = eval(cfg['pyeval'][col])
+		# 数据库连接信息段
+		for col in cfg['dbconstr']:
+			if self.init_dict[col]:
+				continue
+			self.init_dict[col] = cfg['dbconstr'][col]
+		# 配置文件自定义段
+		for sec in cfg['configfile']:
+			if self.init_dict[sec]:
+				continue
+				self.init_dict[sec] = cfg['configfile'][sec]
+		# 从sectiondef段读取其他需要读取的配置段
+		for spe in cfg['secdef']:
+			for col in cfg[spe]:
 				if self.init_dict[col]:
-					# 已加载变量不重复加载
+					# 优先级最低，不覆盖
 					continue
-				self.init_dict[col] = cfg[sec][col]
-				# pprint(self.init_dict)
+				self.init_dict[col] = cfg[spe][col]
 		return self.init_dict
 
 	def mfdate(self,inidate,mode=1):
-		# 读取ini中的datetime对象进行格式化
+		# 读取ini中的datetime对象进行格式化,废弃，改为配置文件中指定section进行读取
 		if mode == 1:
 			statement='(%s).' % (inidate)+'strftime("%Y-%m-%d %H:%M:%S")'
 		elif mode ==2:
@@ -124,78 +148,72 @@ class UserDataGenerator():
 			statement='(%s).' % (inidate)+'strftime("%Y%m00")'
 		return eval(statement)
 
-	def selfclean(self):
+	def selfclean(self,cfg='clean_Common_0001.json'):
 		#清理表，通用清理方案
-		jdata = self.readcfg(cfg='clean_Common_0001.json')
+		jdata = self.readcfg(cfg=cfg)
 		u = self.cfgparser(jdata)
 		for tbdsql,DbDriver in u:
 			print(f"DbDriver={DbDriver},tbdsql={tbdsql}")
-			sql = self.replacer(tbdsql,**self.init_dict)
-			self.sql_list.append((sql,DbDriver))
+			# sql = self.replacer(tbdsql,**self.init_dict)
+			self.sql_list.append((tbdsql,DbDriver))
 
-	def cbrand(self,brand):
-		if brand.upper()=='SZX':
+	def cbrand(self,cfg='base_BrandSzx_0001.json'):
+		if self.init_dict['brand'].upper()=='SZX':
 			#加载预付费专属配置ABM_BILL_DAY等等
-			szx_dict = {'billtime':dt.strftime("%Y%m%d"),
-						'billday':dt.strftime("%Y%m%d"),
-						'nextbillday':lunar(dt).nextbillday,
-						'billcycle':dt.strftime("%Y%m00")}
 			# sql数据列
-			jdata = self.readcfg(cfg='base_BrandSzx_0001.json')
+			jdata = self.readcfg(cfg=cfg)
 			u = self.cfgparser(jdata)
 			for tbdsql,DbDriver in u:
 				print(f"DbDriver={DbDriver},tbdsql={tbdsql}")
-				sql = self.replacer(tbdsql,**szx_dict)
-				self.sql_list.append((sql,DbDriver))
-		elif brand.upper()=='GT':
+				# sql = self.replacer(tbdsql,**szx_dict)
+				self.sql_list.append((tbdsql,DbDriver))
+		elif self.init_dict['brand'].upper()=='GT':
 			pass
 		else:
 			print("May be wrong with cfgfiles.")
 
 
-	def cactive(self,active):
+	def cactive(self,cfg):
 		# 调用sqlplus查询，或者直接给定状态
-		if active is True:
+		if self.init_dict['active'] is True:
 			#加载激活专属配置
-			act_dict = {'active':1}
+			# act_dict = {'active':1} 废弃，改为使用全局配置
 			# sql数据列
-			jdata = self.readcfg(cfg='active_BrandSzx_0001.json')
+			jdata = self.readcfg(cfg=cfg)
 			u = self.cfgparser(jdata)
 			for tbdsql,DbDriver in u:
 				print(f"DbDriver={DbDriver},tbdsql={tbdsql}")
-				sql = self.replacer(tbdsql,**act_dict)
-				self.sql_list.append((sql,DbDriver))
-		elif active is False:
+				# sql = self.replacer(tbdsql,**act_dict)
+				self.sql_list.append((tbdsql,DbDriver))
+		elif self.init_dict['active'] is False:
 			pass
 		else:
 			print("May be wrong with cfgfiles.")
 
-
-	def croute(self,route):
+	def croute(self,cfg='route_BrandSzx_0001.json'):
 		# 调用sqlplus查询，或者直接给定状态
-		if route is True:
-			#加载路由专属配置
-			r_dict = {'nodeid':2522}
+		if self.init_dict['nodeid'] is True:
 			# sql数据列
-			jdata = self.readcfg(cfg='route_BrandSzx_0001.json')
+			jdata = self.readcfg(cfg=cfg)
 			u = self.cfgparser(jdata)
 			for tbdsql,DbDriver in u:
 				print(f"DbDriver={DbDriver},tbdsql={tbdsql}")
-				sql = self.replacer(tbdsql,**r_dict)
-				self.sql_list.append((sql,DbDriver))
-		elif route is False:
+				# sql = self.replacer(tbdsql,**r_dict)
+				self.sql_list.append((tbdsql,DbDriver))
+		elif self.init_dict['nodeid'] is False:
 			pass
 		else:
 			print("May be wrong with cfgfiles.")
 
-	def busidata(self,cfg='base_prod206_0001'):
+	def busidata(self,cfg='base_prod206_0001.json'):
 		# 选择业务数据生成
-		jdata = self.readcfg(cfg)
+		jdata = self.readcfg(cfg=self.init_dict['bcfg'])
 		u = self.cfgparser(jdata)
 		for tbdsql,DbDriver in u:
 			print(f"DbDriver={DbDriver},tbdsql={tbdsql}")
-			sql = self.replacer(tbdsql,**self.init_dict)
-			self.sql_list.append((sql,DbDriver))
+			# sql = self.replacer(tbdsql,**self.init_dict)
+			self.sql_list.append((tbdsql,DbDriver))
+
 	def readcfg(self,cfg):
 		#读取单个配置
 		cfg = os.path.join(busidir,cfg)
@@ -215,7 +233,8 @@ class UserDataGenerator():
 		for k in jdata.keys():
 			# DbDriver,Table,DML,BusiUniq = k.split(".")
 			DbDriver = k.split(".")[0]
-			sql = self.replacer(jdata[k],**{})
+			sql = self.replacer(jdata[k],**self.init_dict)
+			# sql = jdata[k]
 			# print(sql,DbDriver)
 			yield sql,DbDriver
 
@@ -229,46 +248,97 @@ class UserDataGenerator():
 		try:
 			sql = tbdsql.format(**var_dict)
 			return sql
-		except ValueError as e:
+		except KeyError as e:
 			print(e)
-			print("通常来说，你可能输错值了。")
+			print("配置字典缺少对应值。")
 
-	def generator(self,sql,DbDriver='oracle'):
+	def ltuple2dict(self,ltuple):
+		"""
+		sqllist trans to sqldict
+		:param ltuple:
+		:return:
+		"""
+		dtuple = {}
+		# 统计key值
+		allkey = set([x[1] for x in ltuple])
+		for db in allkey:
+			# 根据每个key构造对应的[]
+			dtuple[db] = []
+		for tup in ltuple:
+			dtuple[tup[1]].append(tup[0])
+		return dtuple
+
+	def generator(self,sqllist):
 		"""
 		DbDriver,tbdsql in cfgparser(jdata)
 		:param sql:
 		:param DbDriver:
 		:return:
 		"""
-		os.makedirs(self.servnumber)
-		with open(os.path.join(sqlfdir,self.servnumber,'%s_%s.sql' % (DbDriver,self.servnumber)),'a',encoding='utf-8') as f:
-			f.write(sql)
-			f.write("\n")
-		print("记录追加:%s_%s.sql" % (DbDriver,self.servnumber))
-
+		sqld = os.path.join(sqlfdir,self.init_dict['servnumber'])
+		if not os.path.exists(sqld):
+			os.makedirs(sqld)
+		else:
+			rmtree(sqld)
+			os.makedirs(sqld)
+		# 根据DbDriver归类
+		sqldict = self.ltuple2dict(sqllist)
+		for DbDriver in sqldict.keys():
+			filename = f"{DbDriver}_{self.init_dict['servnumber']}.sql"
+			with open(os.path.join(sqld,filename),'a',encoding='utf-8') as f:
+				sqllist = sqldict[DbDriver]
+				for sql in sqllist:
+					f.write(sql)
+					f.write("\n")
+					
 	def sqlexecutor(self):
 		#执行对应号码下的所有脚本
 		pass
 
-	def process(self):
-		# 目录结构完整
-		self.direxist(busidir)
-		self.direxist(sqlfdir)
-		self.direxist(predata)
-		# 获取用户现存资料
-		subs=self.getinfo(self.servnumber)
-		# 品牌判断
-		self.cbrand(subs.brand)
-		# 是否激活
-		self.cactive(subs.active)
-		# 是否有路由信息
-		self.croute(subs.route)
+	def process(self,**kwargs):
+		"""
+		Do not disturb the order
+		Especially Function replace_dict
+		"""
 		# 加载全局变量
-		self.replace_dict()
+		if kwargs.get('cfgfile',None):
+			self.replace_dict(kwargs['cfgfile'])
+		else:
+			self.replace_dict('GlobalSettings.ini')
+		
+		# 获取用户现存资料
+		if kwargs.get('servnumber',None):
+			self.getinfo(kwargs['servnumber'])
+		else:
+			self.getinfo(self.init_dict['servnumber'])
+
+		# 品牌判断
+		if kwargs.get('brand',None):
+			self.cbrand(kwargs['brand'])
+		else:
+			self.cbrand(self.init_dict['servnumber'])
+		# 是否激活
+		if kwargs.get('brand',None):
+			self.cbrand(kwargs['brand'])
+		else:
+			self.cbrand(self.init_dict['servnumber'])
+		self.cactive(self.init_dict['active'])
+		# 是否有路由信息
+		if kwargs.get('brand',None):
+			self.cbrand(kwargs['brand'])
+		else:
+			self.cbrand(self.init_dict['servnumber'])
+		self.croute(self.init_dict['nodeid'])
 		# 数据清理
-		self.selfclean()
+		if kwargs.get('brand',None):
+			self.selfclean()
+		else:
+			self.selfclean(self.init_dict['scfg'])
 		# 业务数据
-		self.busidata()
+		if kwargs.get('brand',None):
+			self.busidata()
+		else:
+			self.busidata(self.init_dict['bcfg'])
 		# 生成sql文件
 		self.generator(self.sql_list)
 		# sql执行器
