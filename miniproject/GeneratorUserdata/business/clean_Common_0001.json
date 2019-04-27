@@ -1,7 +1,0 @@
-{
-    "oracle.hsc_subs_subscriber.delete.d_0001":"DELETE HSC_SUBS_SUBSCRIBER WHERE SERVNUMBER={servnumber};",
-    "timesten.hsc_subs_subscriber.delete.d_0001":"DELETE HSC_SUBS_SUBSCRIBER WHERE SERVNUMBER={servnumber};",
-    "oracle.hsc_subs_product.delete.d_0001":"DELETE  HSC_SUBS_PRODUCT  WHERE SUBSID={subsid};",
-    "timesten.hsc_subs_product.delete.d_0001":"DELETE  HSC_SUBS_PRODUCT  WHERE SUBSID={subsid};",
-    "note":"清除数据"
-  }

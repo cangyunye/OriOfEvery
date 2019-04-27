@@ -1,5 +1,0 @@
-{
-    "oracle.hsc_subs_subscriber.update.cachegroup_0001":"UPDATE HSC_SUBS_SUBSCRIBER SET STATUSDATE=to_date({statusdate},'yyyymmddhh24miss') WHERE SERVNUMBER={servnumber};",
-    "timesten.hsc_subs_product.insert.prod206_0001":"INSERT INTO HSC_SUBS_PRODUCT(SUBSID,SUBSPRODID,PRODID,TARIFFITEMID,PRICE,STARTDATE,ENDDATE,ISMAINPROD,IFPERSONPAY,GROUPID) VALUES ({subsid},{subsprodid},'206','prodfee.1000151',0,to_date('20011101000000','yyyymmddhh24miss'),to_date('203771101000000','yyyymmddhh24miss'),1,1,0);",
-    "note":"crm联调环境专用数据补充"
-  }
