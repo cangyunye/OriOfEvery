@@ -1,11 +1,16 @@
 # 黑白棋游戏
 import pygame, sys, random
 from pygame.locals import *
+from os import path
+# from math import sqrt
 
 # TODO：比赛完成后不退出游戏
 # TODO：显示可落子位置
 # TODO：增加
  
+
+scriptname = path.realpath(__file__)
+scriptdir = path.dirname(scriptname)
 BACKGROUNDCOLOR = (255, 255, 255)
 BLACK = (255, 255, 255)
 BLUE = (0, 0, 255)
@@ -16,7 +21,7 @@ PIECEHEIGHT = 47
 BOARDX = 39
 BOARDY = 39
 FPS = 40
- 
+directions = [ [0, 1], [1, 1], [1, 0], [1, -1], [0, -1], [-1, -1], [-1, 0], [-1, 1] ]
 # 退出
 def terminate():
     pygame.quit()
@@ -49,10 +54,7 @@ def getNewBoard():
 # 有效落子判定
 def isValidMove(board, tile, xstart, ystart):
     # 如果该位置已经有棋子或者出界了，返回False
-    if not isOnBoard(xstart, ystart):
-        print("落子不在界内。")
-    elif  board[xstart][ystart] != 'none':
-        print("已有棋子占位。")
+    if not isOnBoard(xstart, ystart) or  board[xstart][ystart] != 'none':
         return False
  
     # 临时将tile 放到指定的位置
@@ -65,31 +67,25 @@ def isValidMove(board, tile, xstart, ystart):
  
     # 要被翻转的棋子
     tilesToFlip = []
-    # 对八方向量检索各可落子点
-    for xdirection, ydirection in [ [0, 1], [1, 1], [1, 0], [1, -1], [0, -1], [-1, -1], [-1, 0], [-1, 1] ]:
-        # 落子坐标
+    tmps=[]
+    # 对八方向依次检索
+    for xdirection, ydirection in directions:
+        # 相对起点坐标
         x, y = xstart, ystart
-        # 矢量延伸
         x += xdirection
         y += ydirection
-        # 矢量延伸判定是否界内及对方的子，直到有新空格
-        if isOnBoard(x, y) and board[x][y] == otherTile:
+        while  isOnBoard(x,y) and  board[x][y] == otherTile :
             x += xdirection
             y += ydirection
-            # 出界则换向
-            if not isOnBoard(x, y):
+            if not isOnBoard(x,y):
+                # 出界换向
+               break
+            elif board[x][y] == otherTile:
+                # 对方棋子则判断下一点位
                 continue
-            # 一直走到出界或不是对方棋子的位置
-            while board[x][y] == otherTile:
-                x += xdirection
-                y += ydirection
-                if not isOnBoard(x, y):
-                    break
-            # 出界了，则没有棋子要翻转OXXXXX
-            if not isOnBoard(x, y):
-                continue
-            # 是自己的棋子OXXXXXXO
-            if board[x][y] == tile:
+            elif board[x][y] == tile:
+                print(f"翻转起点:{xstart}_{ystart}")
+                print(f"翻转尾端:{x}_{y}")
                 while True:
                     x -= xdirection
                     y -= ydirection
@@ -98,6 +94,8 @@ def isValidMove(board, tile, xstart, ystart):
                         break
                     # 需要翻转的棋子
                     tilesToFlip.append([x, y])
+                print(f"tilesToFlip:{tilesToFlip}")
+
  
     # 将前面临时放上的棋子去掉，即还原棋盘
     board[xstart][ystart] = 'none' # restore the empty space
@@ -116,7 +114,6 @@ def isOnBoard(x, y):
 # 获取可落子的位置
 def getValidMoves(board, tile):
     validMoves = []
- 
     for x in range(8):
         for y in range(8):
             if isValidMove(board, tile, x, y) != False:
@@ -210,12 +207,12 @@ pygame.init()
 mainClock = pygame.time.Clock()
 gameplayer = 'player'
 # 加载图片
-boardImage = pygame.image.load('board.png')
+boardImage = pygame.image.load(path.join(scriptdir,'board.png'))
 # 返回x,y轴
 boardRect = boardImage.get_rect()
-blackImage = pygame.image.load('black.png')
+blackImage = pygame.image.load(path.join(scriptdir,'black.png'))
 blackRect = blackImage.get_rect()
-whiteImage = pygame.image.load('white.png')
+whiteImage = pygame.image.load(path.join(scriptdir,'white.png'))
 whiteRect = whiteImage.get_rect()
  
 basicFont = pygame.font.SysFont(None, 48)
@@ -260,6 +257,7 @@ while True:
             row = int((y-BOARDY)/CELLHEIGHT)
             if makeMove(mainBoard, playerTile, col, row) == True:
                 print(f"玩家落子第{row+1}行，第{col+1}列")
+                # 电脑是否有可行走法
                 if getValidMoves(mainBoard, computerTile) != []:
                     turn = 'computer'
 
@@ -271,7 +269,7 @@ while True:
         makeMove(mainBoard, computerTile, x, y)
         savex, savey = x, y
  
-        # 玩家没有可行的走法了
+        # 玩家是否有可行走法
         if getValidMoves(mainBoard, playerTile) != []:
             turn = gameplayer
  
