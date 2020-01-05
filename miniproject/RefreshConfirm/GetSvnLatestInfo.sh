@@ -6,14 +6,14 @@
 #时间：2020年1月4日21:06:10
 ##################
 localuppath=$1 #localuppath
-mainuppath=$2 #mainupgradepath
+svnuppath=$2 #mainupgradepath
 # 定义变量
 uptmp=svnupdate.tmp
 upfilter=svnupdate.filter
 infotmp=svninfo.tmp
-FileA=svnupdate.A
-FileU=svnupdate.U
-FileD=svnupdate.D
+#FileA=svnupdate.A
+#FileU=svnupdate.U
+#FileD=svnupdate.D
 patA='^A ' #增加
 patU='^U ' #更新
 patD='^D ' #删除
@@ -29,18 +29,20 @@ shellOutFile=shellOut.txt
 if [ ! -f ${localuppath} ]
     then
     mkdir -p $localuppath
-    svn co ${mainuppath}
+    svn co ${svnuppath}
 fi
 cd ${localuppath}
 
 # 清理文件
-rm ${uptmp} ${upfilter} ${infotmp} ${FileA} ${FileU} ${FileD} ${shellOutFile}
+#rm ${uptmp} ${upfilter} ${infotmp} ${FileA} ${FileU} ${FileD} ${shellOutFile}
+rm ${uptmp} ${upfilter} ${infotmp} ${FileRAD} ${shellOutFile}
 
 # 进入localrootpath
 cd ${localrootpath}
 # 提取update信息中的AUD
 svn update > ${uptmp}
 cat ${uptmp} | egrep "$patA|$patU|$patD" | sed  's/[ ]\+/,/g' > ${upfilter}
+# 分成多个文件
 #cat ${uptmp} | grep "$patA" > ${FileA}
 #cat ${uptmp} | grep "$patU" > ${FileU}
 #cat ${uptmp} | grep "$patD" > ${FileD}
@@ -53,5 +55,7 @@ svn info $line > ${infotmp}
 # 提取Revision,Author,Date部分,删除时区+时间部分和换行符
 egrep "${patRev}|${patAut}|${patDat}" ${infotmp} | awk -F': ' '{print $2}'| sed ':a;N;s/\n/,/g;s/ +.*)$//g;ta' >>${FileRAD}
 done
+# 加入首行列名
+echo "Operation,FilePath,Revision,ChangedAuthor,ChangedDate" >${shellOutFile}
 # 并列拼接
-paste -d',' ${upfilter} ${FileRAD} >${shellOutFile}
+paste -d',' ${upfilter} ${FileRAD} >>${shellOutFile}
