@@ -50,8 +50,8 @@ cat ${uptmp} | egrep "$patA|$patU|$patD" | sed  's/[ ]\+/,/g' > ${upfilter}
 cat ${upfilter}|awk -F ',' '{print $2}' | while read line
 do
 svn info $line > ${infotmp}
-# 提取Revision,Author,Date部分,删除(时间)部分和换行符
-egrep "${patRev}|${patAut}|${patDat}" ${infotmp} | awk -F': ' '{print $2}'| sed ':a;N;s/\n/,/g;s/(.*)$//g;s/(.*)$//g;ta' >>${FileRAD}
+# 提取Revision,Author,Date部分,删除时区+时间部分和换行符
+egrep "${patRev}|${patAut}|${patDat}" ${infotmp} | awk -F': ' '{print $2}'| sed ':a;N;s/\n/,/g;s/ +.*)$//g;ta' >>${FileRAD}
 done
 # 并列拼接
 paste -d',' ${upfilter} ${FileRAD} >${shellOutFile}
