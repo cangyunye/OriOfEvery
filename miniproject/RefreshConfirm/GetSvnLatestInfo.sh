@@ -6,56 +6,65 @@
 #时间：2020年1月4日21:06:10
 ##################
 localuppath=$1 #localuppath
-svnuppath=$2 #mainupgradepath
 # 定义变量
 uptmp=svnupdate.tmp
 upfilter=svnupdate.filter
 infotmp=svninfo.tmp
-#FileA=svnupdate.A
-#FileU=svnupdate.U
-#FileD=svnupdate.D
 patA='^A ' #增加
 patU='^U ' #更新
 patD='^D ' #删除
+# patR='^Restored' #恢复
 patRev='^Revision'
 patAut='Last Changed Author'
 patDat='Last Changed Date'
 FileRAD=RAD.tmp
-shellOutFile=shellOut.txt
-
+# 取最底层目录名称
+shellOutFile=${localuppath##*/}_shellOut.txt
+CurrentDate=$(date +"%Y-%m-%d %H:%M:%S %z")
 
 # 判断目录是否存在，不存在则根据配置重新svn checkout
 
-if [ ! -f ${localuppath} ]
-    then
-    mkdir -p $localuppath
+if [ ! -d ${localuppath} ]; then
+  mkdir -p $localuppath
+  if [ ! -n $2 ]; then
+    svnuppath=$2 #mainupgradepath
     svn co ${svnuppath}
+  else
+    echo "没有提供check out 地址，程序退出，请手工check out。"
+    exit 0
+  fi
 fi
 cd ${localuppath}
 
 # 清理文件
-#rm ${uptmp} ${upfilter} ${infotmp} ${FileA} ${FileU} ${FileD} ${shellOutFile}
-rm ${uptmp} ${upfilter} ${infotmp} ${FileRAD} ${shellOutFile}
+rmfile=(${uptmp} ${upfilter} ${infotmp} ${FileRAD} ${shellOutFile})
+for i in ${rmfile[@]}; do
+  if [ -f ${i} ]; then
+    #echo "清理$i"
+    rm "./$i"
+  else
+    continue
+  fi
+done
 
-# 进入localrootpath
-cd ${localrootpath}
 # 提取update信息中的AUD
-svn update > ${uptmp}
-cat ${uptmp} | egrep "$patA|$patU|$patD" | sed  's/[ ]\+/,/g' > ${upfilter}
-# 分成多个文件
-#cat ${uptmp} | grep "$patA" > ${FileA}
-#cat ${uptmp} | grep "$patU" > ${FileU}
-#cat ${uptmp} | grep "$patD" > ${FileD}
-# 用逗号分隔成csv文件
-# awk '{print $1 ","$2}' ${upfilter} >　${uptmp}
+svn update >${uptmp}
+cat ${uptmp} | egrep "$patA|$patU|$patD" | sed 's/[ ]\+/,/g' >${upfilter}
+
 # 循环处理
-cat ${upfilter}|awk -F ',' '{print $2}' | while read line
-do
-svn info $line > ${infotmp}
-# 提取Revision,Author,Date部分,删除时区+时间部分和换行符
-egrep "${patRev}|${patAut}|${patDat}" ${infotmp} | awk -F': ' '{print $2}'| sed ':a;N;s/\n/,/g;s/ +.*)$//g;ta' >>${FileRAD}
+#cat ${upfilter}|awk -F ',' '{print $2}' | while read line
+cat ${upfilter} | while read line; do
+  if [ ${line%,*} == 'D' ]; then # 由于删除文件不可update后追踪info，所以直接补充
+    printf "Last Changed Author: DeleterUnKnown\nLast Changed Rev: 99999\nLast Changed Date: %s (一, 06 1月 2020)\n" "${CurrentDate}" >${infotmp}
+  else
+    svn info ${line#*,} >${infotmp}
+  fi
+  # 提取Revision,Author,Date部分,删除时区+时间部分和换行符
+  egrep "${patRev}|${patAut}|${patDat}" ${infotmp} | awk -F': ' '{print $2}' | sed ':a;N;s/\n/,/g;s/ +.*)$//g;ta' >>${FileRAD}
 done
 # 加入首行列名
 echo "Operation,FilePath,Revision,ChangedAuthor,ChangedDate" >${shellOutFile}
 # 并列拼接
 paste -d',' ${upfilter} ${FileRAD} >>${shellOutFile}
+# 返回生成文件绝对路径
+echo "`pwd`/${shellOutFile}"
