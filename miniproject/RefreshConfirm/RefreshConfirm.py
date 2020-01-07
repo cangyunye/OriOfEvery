@@ -4,6 +4,9 @@ from dataclasses import dataclass
 import paramiko
 from csv import DictReader
 from openpyxl import load_workbook
+from pathlib import PurePath
+from time import strptime,mktime
+import re
 
 # 版本更新
 # VERSION=1
@@ -18,6 +21,7 @@ USERNAME = sshinfo['username']
 PASSWORD = sshinfo['password']
 
 # 此处要主要路径转换为绝对路径不能使用~
+downloadlist = [] # (remotefile,localfile)
 remotepath = report['remotepath']
 localpath = report['localpath']
 # 调用脚本执行命令
@@ -31,18 +35,44 @@ class Data_S():
 	FilePath: str = '修改文件'
 	Revision: int = '版本'
 	ChangedAuthor: str = '变更人员'
-	ChangedDate: str = '变更日期'
+	ChangedDate: str = 'yyyy/mm/dd hh24:mi:ss' # strptime(ChangedDate, '%Y-%m-%d %H:%M:%S')
 
 
 # 定义execleOut协议
 @dataclass
 class Data_E():
-	# 修改文件，开发人员，日期，回归情况
-	FilePath: str = '修改文件'
+	# 编号，修改文件，开发人员，日期，回归情况
+	Number: int = 0
+	FilePaths: str = '文件列表'
+	FileType: str = '交付件'
 	ChangedAuthor: str = '开发人员'
 	ChangedDate: str = 'yyyy/mm/dd hh24:mi:ss'
 	Status: str = '回归情况'
 
+
+def filematcher(tbd):
+	S, iE = tbd
+	# 将文件列表分成每个文件
+	E_chd = mktime(strptime(iE.ChangedDate))  # 每行的处理时间
+	for ie in iE.FilePaths.split('\n'):
+		# 将每个文件比对是否在shellOut里出现过
+		for iS in S:
+			S_chd = mktime(strptime(iS.ChangedDate))
+			if re.search(PurePath(ie).name, iS.FilePath) and abs(S_chd - E_chd) <= 3600:
+				return True
+
+
+def compare(S, E):
+	# 遍历excel数据
+	for iE in E:
+		# 排除已完成的部分
+		if iE.Status == '测试回归完成':
+			continue
+
+	# TODO 分类比较 if re.search('BIN',iE.FileType)
+	# 对于BIN
+	# 对于JAR/WAR
+	# 对于脚本/配置
 
 def main():
 	# 打印配置信息
@@ -53,12 +83,17 @@ def main():
 	ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 	ssh.connect(HOSTNAME, port=PORT, username=USERNAME, password=PASSWORD)
 	# 调用后台shell脚本，生成shellOut文件
-	ssh.exec_command(command)
+	stdin,stdout,stderr = ssh.exec_command(command)
+	_file = stdout.read()
+	remotefile = _file
+	localfile = PurePath(localpath,_file).name
+	downloadlist.append((remotefile,localfile))
 	# 方式1：下载文件
 	try:
 		trans = ssh.get_transport()
 		sftp = paramiko.SFTPClient.from_transport(trans)
-		sftp.get(remotepath, localpath)
+		for file in downloadlist:
+			sftp.get(*file)
 	except FileNotFoundError as e:
 		print("文件不存在，")
 
@@ -83,7 +118,7 @@ def main():
 	sheet = wb.get_sheet_by_name('Sheet1')
 	for row in map(str, range(2, sheet.max_row + 1)):
 		for line in sheet[row]:
-			excelOutList.append(Data_E(sheet[f'F{row}'], sheet[f'G{row}'], sheet[f'B{row}'], sheet[f'L{row}']))
+			excelOutList.append(Data_E(sheet[f'A{row}'],sheet[f'F{row}'], sheet[f'E{row}'],sheet[f'G{row}'], sheet[f'B{row}'], sheet[f'L{row}']))
 
 	# 分析shellOut和excelparse，并输出结果到pythonOut
 
