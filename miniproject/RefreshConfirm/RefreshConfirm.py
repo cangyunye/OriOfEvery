@@ -6,7 +6,7 @@ from csv import DictReader
 from openpyxl import load_workbook
 from pathlib import PurePath
 from time import strptime, mktime
-# from datetime import datetime
+from datetime import datetime
 import re
 
 # 版本更新
@@ -47,6 +47,8 @@ class Data_E():
 	FilePaths: str = '文件列表'
 	FileType: str = '交付件'
 	ChangedAuthor: str = '开发人员'
+	TestEngineer: str = '测试人员'
+	UpStatus: str = '转测状态'
 	# 如果B列为日期格式，那么会自动转换为datetime.datetime对象
 	ChangedDate: str = 'yyyy-mm-dd hh24:mi:ss'
 	Status: str = '回归情况'
@@ -67,19 +69,22 @@ def filematcher(tbd):
 def compare(S, E):
 	# 遍历excel数据
 	# excelOutList[1].ChangedDate.__rsub__(datetime.now()).seconds <= 3600
+	pass
+
 
 # TODO 分类比较 if re.search('BIN',iE.FileType)
 # 对于BIN
 # 对于JAR/WAR
 # 对于脚本/配置
 
-def retrieveAppend(command,ssh):
+def retrieveAppend(command, ssh):
 	stdin, stdout, stderr = ssh.exec_command(command)
 	_file = stdout.read()
 	remotefile = _file
 	# 过滤为仅文件名不带目录
 	localfile = PurePath(localpath, _file).name
 	downloadlist.append((remotefile, localfile))
+
 
 def main():
 	# 打印配置信息
@@ -121,14 +126,29 @@ def main():
 	wb = load_workbook(localpath['excelpath'])
 	sheet = wb.get_sheet_by_name('Sheet')
 	for row in map(str, range(2, sheet.max_row + 1)):
-		if sheet[f'L{row}'].value == '测试回归完成' or sheet[f'L{row}'].value == None:
+		if sheet[f'L{row}'].value == '测试回归完成' or sheet[f'A{row}'].value == None:
 			continue
 		excelOutList.append(
 			Data_E(sheet[f'A{row}'].value, sheet[f'F{row}'].value, sheet[f'E{row}'].value, sheet[f'G{row}'].value,
-				   sheet[f'B{row}'].value, sheet[f'L{row}'].value))
+				   sheet[f'H{row}'].value, sheet[f'I{row}'].value, sheet[f'B{row}'].value, sheet[f'L{row}'].value))
 	wb.close()
+	# 分析shellOut和excelOut，并输出结果到ReportOut
+	# rep = load_workbook(report['ReportOut'])
+	rep = open(report['ReportOut'])
+	rep.write("=============刷包转测文件数据整理，已转测部分============")
+	for i in excelOutList[1:]:
+		if i.UpStatus == '已转测':
+			rep.write(f"编号：{i.Number}")
+			rep.write(f"文件：{i.FilePaths}")
+			rep.write(f"测试人员：{i.TestEngineer}")
+		# 写作报告
+		elif i.ChangedDate.__rsub__(datetime.now()).seconds >= 3600:
+			rep.write(f"编号：{i.Number}")
+			rep.write(f"文件：{i.FilePaths}")
+			rep.write(f"测试人员：{i.TestEngineer}")
+	rep.close()
 
-# 分析shellOut和excelparse，并输出结果到pythonOut
+# 写作报告
 
 # parseOut()
 
