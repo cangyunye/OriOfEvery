@@ -1,84 +1,137 @@
+from dataclasses import dataclass
+import paramiko
+from csv import DictReader
+from openpyxl import load_workbook
+from pathlib import PurePath
+from time import strptime,mktime
+from datetime import datetime
+import re
+from pathlib import PurePath
+
+@dataclass
+class Data_S():
+	Operation: str = 'U'
+	FilePath: str = '修改文件'
+	Revision: int = '版本'
+	ChangedAuthor: str = '变更人员'
+	ChangedDate: str = 'yyyy-mm-dd hh24:mi:ss'  # strptime(ChangedDate, '%Y-%m-%d %H:%M:%S')
+
+
+@dataclass
+class Data_E():
+	# 编号，修改文件，开发人员，日期，回归情况
+	Number: int = 0
+	FilePaths: str = '文件列表'
+	FileType: str = '交付件'
+	ChangedAuthor: str = '开发人员'
+	TestEngineer: str = '测试人员'
+	UpStatus: str = '转测状态'
+	# 如果B列为日期格式，那么会自动转换为datetime.datetime对象
+	ChangedDate: str = 'yyyy-mm-dd hh24:mi:ss'
+	Status: str = '回归情况'
+
+def GetFileName(text:str):
+    # 过滤掉特殊字符
+    tarray = []
+    for i in text.split():
+        tarray.append(re.sub('["。”]',"",PurePath(i).name))   
+    return tarray
+
+
+def FindOne(efilename,eFileType,eChangedDate):
+    f = lambda x: abs(datetime.strptime(x.ChangedDate,'%Y-%m-%d %H:%M:%S').__rsub__(eChangedDate).total_seconds()) < 3600
+    if re.search('脚本',eFileType):
+        for s in shellOutList:
+            if re.search(efilename,s.FilePath) and f(s):
+                return True
+    elif re.search('BIN包',eFileType):
+        for s in binOutList:
+            if re.search(efilename,s.FilePath) and f(s):
+                return True
+    elif re.search('JAR包',eFileType):
+        for s in jarOutList:
+            if re.search(efilename,s.FilePath) and f(s):
+                return True
+    elif re.search('配置',eFileType):
+        for s in cfgOutList:
+            if re.search(efilename,s.FilePath) and f(s):
+                return True   
+    else:
+        return False
+
+binOutList = []
+jarOutList = []
+cfgOutList = []
+shellOutList = []
+with open('F:\\DreamToDream\\OnMyWay\\Programming\\Python\\miniproject\\RefreshConfirm\\1.csv', 'r', encoding='utf-8') as csvfile:
+    reader = DictReader(csvfile)
+    for row in reader:
+        shellOutList.append(
+            Data_S(row['Operation'], row['FilePath'], row['Revision'], row['ChangedAuthor'], row['ChangedDate']))
+
+excelOutList = []
+wb = load_workbook('F:\\DreamToDream\\OnMyWay\\Programming\\Python\\miniproject\\RefreshConfirm\\刷包.xlsx')
+sheet = wb.get_sheet_by_name('Sheet')
+for row in map(str, range(2, sheet.max_row + 1)):
+    if sheet[f'L{row}'].value == '测试回归完成' or sheet[f'A{row}'].value == None:
+        continue
+    excelOutList.append(
+        Data_E(sheet[f'A{row}'].value, sheet[f'F{row}'].value, sheet[f'E{row}'].value, sheet[f'G{row}'].value,
+                sheet[f'H{row}'].value, sheet[f'I{row}'].value, sheet[f'B{row}'].value, sheet[f'L{row}'].value))
+wb.close()      
+
+rep_commited = open('F:\\DreamToDream\\OnMyWay\\Programming\\Python\\miniproject\\RefreshConfirm\\rep_commited.txt','w+')
+rep_commited.write("=============="*5+"刷包转测文件数据整理，已转测部分"+"============"*5+"\n")
+rep_ready = open('F:\\DreamToDream\\OnMyWay\\Programming\\Python\\miniproject\\RefreshConfirm\\rep_ready.txt','w+')
+rep_ready.write("============="*5+"刷包转测文件数据整理，登记1小时以上部分"+"============"*5+"\n")
+
+
+
+for e in excelOutList[1:]:
+    # 打印已转测部分
+    if e.UpStatus is not  None and re.search('已转测',e.UpStatus) :
+        rep_commited.write(f"编号：{e.Number}\n")
+        rep_commited.write(f"文件：{e.FilePaths}\n")
+        rep_commited.write(f"测试人员：{e.TestEngineer}\n")
+        rep_commited.write(f"说明： excel中登记已转测")
+        rep_commited.write("================================="*5+"\n")
+    # 对文件类型分类，用于对不同地址获取的svn信息进行确认
+    else:       
+        for efilename in GetFileName(e.FilePaths):
+            # 查找excel中未登记已转测，但svn有最近1小时提交记录的文件
+            if FindOne(efilename,e.FileType,e.ChangedDate):
+                rep_commited.write(f"编号：{e.Number}\n")
+                rep_commited.write(f"文件：{e.FilePaths}\n")
+                rep_commited.write(f"测试人员：{e.TestEngineer}\n") 
+                rep_commited.write(f"说明： excel中未登记已转测，但svn有最近1小时提交记录的文件")
+                rep_commited.write("================================="*5+"\n")
+            # excel中未登记已转测，但svn有1小时以上提交记录的文件
+            elif e.ChangedDate.__rsub__(datetime.now()).seconds >= 3600:
+                rep_commited.write(f"编号：{e.Number}\n")
+                rep_commited.write(f"文件：{e.FilePaths}\n")
+                rep_commited.write(f"测试人员：{e.TestEngineer}\n")
+                rep_commited.write(f"说明： excel中未登记已转测，但svn有1小时以上提交记录的文件")
+                rep_commited.write("================================="*5+"\n")
+            else:
+                rep_ready.write(f"编号：{e.Number}\n")
+                rep_ready.write(f"文件：{e.FilePaths}\n")
+                rep_ready.write(f"测试人员：{e.TestEngineer}\n")
+                rep_ready.write(f"说明： 不完整数据，待确认")   
+                rep_ready.write("================================="*5+"\n")
+
+rep_commited.close()
+rep_ready.close()
+
 """
-    AQI网页爬取
-    BeautifulSoup
-    [parser]
-    BeautifulSoup(markup, "html.parser")
-    BeautifulSoup(markup, "lxml")
-    BeautifulSoup(markup, "lxml-xml")only supported XML parser
-    BeautifulSoup(markup, "xml")only  supported XML parser
-    BeautifulSoup(markup, "html5lib")  HTML5 Very slow
-    use lxml for speed
-    [function]
-    soup.find_all('title', limit=1)查询所有tag为title的记录不超过1条
-    soup.find_all("a", string="Elsie")查询TAG为a的，值为Elsie的记录
-    soup.find_all(string="Elsie")仅查询值为Elsie的记录
-    soup.find_all("a", class_="sister")class由于是关键词，所以带下划线
-    # [<a class="sister" href="http://example.com/elsie" id="link1">Elsie</a>,
-    #  <a class="sister" href="http://example.com/lacie" id="link2">Lacie</a>,
-    #  <a class="sister" href="http://example.com/tillie" id="link3">Tillie</a>]
-    soup.find_all(attrs={"data-foo": "value"})
-    # [<div data-foo="value">foo!</div>]
-    soup.find_all(href=re.compile("elsie"))
-    # [<a class="sister" href="http://example.com/elsie" id="link1">Elsie</a>]
-    soup.find_all(id='link2')
-    # [<a class="sister" href="http://example.com/lacie" id="link2">Lacie</a>]
-    soup.find('title')查询一条tag为title的记录
-    soup.select("p.strikeout.body")
-    # [<p class="body strikeout"></p>]
-    soup.get_text(strip=True)提取标签中的值,并去除空格
-    soup.text()提取标签中的值
+def filematcher(tbd):
+	S, iE = tbd
+	# 将文件列表分成每个文件
+	E_chd = mktime(strptime(iE.ChangedDate))  # 每行的处理时间
+	for ie in iE.FilePaths.split('\n'):
+		# 将每个文件比对是否在shellOut里出现过
+		for iS in S:
+			S_chd = mktime(strptime(iS.ChangedDate))
+			if re.search(PurePath(ie).name, iS.FilePath) and abs(S_chd - E_chd) <= 3600:
+				return True
 """
-import requests
-import urllib.request
-from bs4 import BeautifulSoup
-def get_xinwen():
-    """
-        新闻信息
-    """
-    url = 'http://www.3dmgame.com/news/'
-def get_zatan():
-    """
-        杂谈信息
-    """
-
-    zatan_info = []
-    url = 'http://www.3dmgame.com/zt/'
-    r = requests.get(url, timeout=30)
-    r.encoding = 'utf-8'
-    soup = BeautifulSoup(r.text,'lxml')
-    #由于网页中查询的bottom能查到2组结果，选择第2组
-    zatan_div_list = soup.find_all('div',{'class':'QZlisttxt'})[0]
-    zatan_info_list = zatan_div_list.find_all('a')
-    zatan_link_list = []
-    for list_index,link_value in enumerate(zatan_info_list):
-        if list_index % 2 == 1 :
-            zatan_link_list.append((list_index,link_value))
-        else :
-            continue
-    # # zatan_link_list = zatan_div_list.find_all('a')
-    print('-----------------\n',zatan_link_list[3])
-    # for zatan in zatan_link_list:
-    #     zatan_title = zatan.get_text(strip=True)
-    #     #从soup型列表中，提取href字段的值，并去掉"/"
-    #     zatan_link = zatan['href'][1:]
-    #     zatan_info.append((zatan_title,zatan_link))
-    # print(zatan_info)
-    # return city_name
-
-def to_csv():
-    pass
-
-
-def out_print():
-    pass
-def main():
-    # out_print()
-    # to_csv()
-    # print(get_city_aqi('guangzhou'))
-    get_zatan()
-
-if __name__ == '__main__':
-    main()
-
-
-
+# 发到指定人员邮箱
