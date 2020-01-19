@@ -24,15 +24,17 @@ CurrentDate=$(date +"%Y-%m-%d %H:%M:%S %z")
 
 # 判断目录是否存在，不存在则根据配置重新svn checkout
 
-if [ ! -d ${localuppath} ]; then
-  mkdir -p $localuppath
-  if [ ! -n $2 ]; then
-    svnuppath=$2 #mainupgradepath
-    svn co ${svnuppath}
-  else
-    echo "没有提供check out 地址，程序退出，请手工check out。"
-    exit 0
-  fi
+if [ ! -d ${localuppath} ]
+    then
+    mkdir -p $localuppath
+    if [ -n $2 ]
+      then
+      svnuppath=$2 #mainupgradepath
+      svn co "${svnuppath}" $localuppath
+    else
+      echo "没有提供check out 地址，程序退出，请手工check out。"
+      exit 0
+    fi
 fi
 cd ${localuppath}
 
