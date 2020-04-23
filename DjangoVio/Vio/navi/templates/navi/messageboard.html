@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" http-equiv="refresh" content="3"/>
+        <title>留言板</title>
+        {% load static %}
+        <link rel="stylesheet" type="text/css" href="{% static 'navi/bootstrap/dist/css/bootstrap.min.css' %}">
+    </head>
+    <body>
+        <table class="table table-striped table-bordered table-hover table-condensed">
+            <thead>
+                <tr class="danger">
+                    <th>留言时间</th>
+                    <th>留言者</th>
+                    <th>内容</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if messages %}
+                    {% for message in messages %}
+                        <tr class="{% cycle 'active' 'success' 'warning' 'info' %}">
+                            <td>{{ message.msgdate|date:'Y-m-d H:i:s' }}</td>
+                            <td>{{ message.visitor }}</td>
+                            <td>{{ message.message }}</td>
+                        </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="4">无数据</td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </body>
+</html>
