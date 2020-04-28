@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Django-template</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.3.1/css/bootstrap.min.css">
+    <script src="https://cdn.staticfile.org/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://cdn.staticfile.org/popper.js/1.15.0/umd/popper.min.js"></script>
+    <script src="https://cdn.staticfile.org/twitter-bootstrap/4.3.1/js/bootstrap.min.js"></script>
+  <style>
+    .msgbox {width:100%;
+    height:100px;}
+  </style>
+
+    <base target="_blank">
+</head>
+<body>
+<h1>提交信息码相关数据</h1>
+<form action="save/" method="POST" novalidate="novalidate">
+{% csrf_token %}
+    <table class="table table-striped table-bordered table-hover table-condensed">
+        <div>
+            <label>*模块: </label> <input type="text" name="module" placeholder="app" /><br/>
+            <label>*源文件名: </label> <input type="text" name="codefile" placeholder="navi.py" /><br/>
+            <label>*信息码: </label> <input type="text" name="code" placeholder="APP_INFO_001" > <br/>
+            <label>信息码描述: </label> <textarea class="msgbox" name="codesummary"  > </textarea>
+            <label>解决方案: </label> <textarea class="msgbox" name="solution" > </textarea>
+            <label>代码片段: </label> <textarea class="msgbox" name="codeclip" > </textarea>
+            <label>需求名称: </label> <textarea class="msgbox" name="docinfo" > </textarea>
+            <input class="btn btn-success" type="submit" value="提交"/>
+        </div>
+    </table>
+</form>
+</body>
+</html>
