@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Django-template</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.3.1/css/bootstrap.min.css">
+    <script src="https://cdn.staticfile.org/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://cdn.staticfile.org/popper.js/1.15.0/umd/popper.min.js"></script>
+    <script src="https://cdn.staticfile.org/twitter-bootstrap/4.3.1/js/bootstrap.min.js"></script>
+  <style>
+    .msgbox {width:100%;
+    height:100px;}
+  </style>
+
+    <base target="_blank">
+</head>
+<body>
+<h1>添加信息码数据</h1>
+<form action="save/" method="POST" novalidate="novalidate">
+{% csrf_token %}
+    <table class="table table-striped table-bordered table-hover table-condensed">
+        <div>
+            <label>*模块: </label> <input type="text" name="module" placeholder="app" /> <br/>
+            <label>*源文件名: </label> <input type="text" name="source" placeholder="upload.cpp" /><br/>
+            <label>*告警错误码: </label> <input type="text" name="errcode" placeholder="ERROR_STD_001" > <br/>
+            <label>告警属性: </label> <textarea class="msgbox" name="errattr"  > </textarea>
+            <label>告警参数: </label> <textarea class="msgbox" name="errpara" > </textarea>
+            <label>对系统的影响: </label> <textarea class="msgbox" name="syseffect" > </textarea>
+            <label>系统自处理过程: </label> <textarea class="msgbox" name="sysproc" > </textarea>
+            <label>可能原因: </label> <textarea class="msgbox" name="cause" > </textarea>
+            <label>处理步骤: </label> <textarea class="msgbox" name="procstep" > </textarea>
+            <input class="btn btn-success" type="submit" value="提交"/>
+        </div>
+    </table>
+</form>
+</body>
+</html>

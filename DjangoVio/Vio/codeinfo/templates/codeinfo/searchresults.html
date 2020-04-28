@@ -2,53 +2,86 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1">
-      <link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.3.1/css/bootstrap.min.css">
-      <script src="https://cdn.staticfile.org/jquery/3.2.1/jquery.min.js"></script>
-      <script src="https://cdn.staticfile.org/popper.js/1.15.0/umd/popper.min.js"></script>
-      <script src="https://cdn.staticfile.org/twitter-bootstrap/4.3.1/js/bootstrap.min.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    {% load static %}
+    <link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.3.1/css/bootstrap.min.css">
+    <script src="https://cdn.staticfile.org/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://cdn.staticfile.org/popper.js/1.15.0/umd/popper.min.js"></script>
+    <script src="https://cdn.staticfile.org/twitter-bootstrap/4.3.1/js/bootstrap.min.js"></script>
     <title>搜索结果</title>
+    <style >
+        .delete-button {
+            background-image:url( {% static "codeinfo/images/close.svg" %}  );
+        }/*背景图片*/
+        .update-button {
+            background-image:url( {% static "codeinfo/images/scan read.svg" %}  );
+        }/*背景图片*/
+    </style>
 </head>
 <body>
+
 <table class="table table-striped table-bordered table-hover table-condensed">
     <thead>
-        <tr class="danger">
-            <th>模块</th>
-            <th>源文件名</th>
-            <th>告警错误码</th>
-            <th>告警属性</th>
-            <th>对系统影响</th>
-            <th>系统处理</th>
-            <th>原因</th>
-            <th>处理步骤</th>
-            <th>更新时间</th>
-        </tr>
+    <tr class="danger">
+        <th>模块</th>
+        <th>源文件名</th>
+        <th>告警错误码</th>
+        <th>告警属性</th>
+        <th>告警参数</th>
+        <th>对系统影响</th>
+        <th>系统处理</th>
+        <th>原因</th>
+        <th>处理步骤</th>
+        <th>更新时间</th>
+        <th>操作</th>
+    </tr>
     </thead>
     <tbody>
-        {% if messages %}
-            {% for message in messages %}
-                <tr class="{% cycle 'active' 'success' 'warning' 'info' %}">
-                    <td>{{ message.module }}</td>
-                    <td>{{ message.source }}</td>
-                    <td>{{ message.errcode }}</td>
-                    <td>{{ message.errattr }}</td>
-                    <td>{{ message.errpara }}</td>
-                    <td>{{ message.syseffect }}</td>
-                    <td>{{ message.sysproc }}</td>
-                    <td>{{ message.cause }}</td>
-                    <td>{{ message.procstep }}</td>
-                    <td>{{ message.upgradedate|date:'Y-m-d H:i:s'}}</td>
-                </tr>
-            {% endfor %}
-        {% else %}
-            <tr>
-                <td colspan="4">无数据</td>
+    {% if messages %}
+        {% for message in messages %}
+            <tr class="{% cycle 'active' 'success' 'warning' 'info' %}">
+                <td>{{ message.module }}</td>
+                <td>{{ message.source }}</td>
+                <td>{{ message.errcode }}</td>
+                <td>{{ message.errattr }}</td>
+                <td>{{ message.errpara }}</td>
+                <td>{{ message.syseffect }}</td>
+                <td>{{ message.sysproc }}</td>
+                <td>{{ message.cause }}</td>
+                <td>{{ message.procstep }}</td>
+                <td>{{ message.upgradedate|date:'Y-m-d H:i:s' }}</td>
+                <td>
+                    <button type="button" class="delete-button" href="delete/"
+                            value="{{ message.id }}">删除
+                    </button>
+                    <button type="button" class="update-button" href="update/" value="{{ message.id }}">更新
+                    </button>
+                </td>
             </tr>
-        {% endif %}
+        {% endfor %}
+    {% else %}
+        <tr>
+            <td colspan="4">无数据</td>
+        </tr>
+    {% endif %}
     </tbody>
 </table>
-  <button type="button" class="btn btn-outline-success" href="update/">更新数据</button>
-  <button type="button" class="btn btn-outline-danger" href="delete/">删除数据</button>
-
 </body>
+<script>
+    $function(){
+        $('.delete-button').click(function(){
+            var val = $(this).val();
+            $.ajax({
+                type: "GET",
+                url: "/delete",
+                data:{"id":val},
+                success : function (data) {
+                    if (data === 'ok'){
+                        window.location.reload()
+                    }
+                }
+            });
+        });
+    }
+</script>
 </html>
