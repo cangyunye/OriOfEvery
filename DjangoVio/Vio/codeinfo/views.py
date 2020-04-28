@@ -1,5 +1,6 @@
 from django.shortcuts import render,HttpResponse
 from django.db.utils import IntegrityError
+from django.db.models import Q
 from datetime import datetime,timedelta
 from .models import CodeInfo,CodeInfoSpe
 # Create your views here.
@@ -12,6 +13,37 @@ def index(request):
 
 def codeadd(request):
 	return render(request,"codeinfo/add.html")
+
+def codedelete(request):
+	return render(request,"codeinfo/delete.html")
+
+def deletesearch(request):
+	module = request.POST.get('module')
+	source = request.POST.get('source')
+	errcode = request.POST.get('errcode')
+	if request.method == "GET":
+		searchresult = CodeInfo.objects.filter(Q(module__exact=module)|Q(source__startswith=source)|Q(errcode__exact=errcode))
+		context = {'messages':searchresult}
+		return render(request,'codeinfo/searchresults.html',context=context)
+
+def delete(request):
+	module = request.POST.get('module')
+	source = request.POST.get('source')
+	errcode = request.POST.get('errcode')
+	if module and source and errcode:
+		CodeInfo.objects.get(Q(module__exact=module)&Q(source__exact=source)&Q(errcode__exact=errcode)).delete()
+	elif module and source :
+		CodeInfo.objects.get(Q(module__exact=module)&Q(source__exact=source)).delete()
+	elif source and errcode :
+		CodeInfo.objects.get(Q(source__exact=source)&Q(errcode__exact=errcode)).delete()
+	elif module:
+		CodeInfo.objects.get(module__exact=module).delete()
+	elif source:
+		CodeInfo.objects.get(source__exact=source).delete()
+	elif errcode:
+		CodeInfo.objects.get(errcode__exact=errcode).delete()
+	return HttpResponse(f'{errcode} delete success.')
+
 def codesave(request):
 	# for spe
 	module = request.POST.get('module')

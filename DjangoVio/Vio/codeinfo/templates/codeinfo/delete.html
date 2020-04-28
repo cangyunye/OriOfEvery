@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Django-template</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.3.1/css/bootstrap.min.css">
+    <script src="https://cdn.staticfile.org/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://cdn.staticfile.org/popper.js/1.15.0/umd/popper.min.js"></script>
+    <script src="https://cdn.staticfile.org/twitter-bootstrap/4.3.1/js/bootstrap.min.js"></script>
+  <style>
+    .msgbox {width:100%;
+    height:100px;}
+  </style>
+
+    <base target="_blank">
+</head>
+<body>
+<h1>删除信息码数据</h1>
+<form action="search/" method="POST" novalidate="novalidate">
+{% csrf_token %}
+    <table class="table table-striped table-bordered table-hover table-condensed">
+        <div><p>填写以下信息时，先进行查询确认修改记录数</p>
+            <label>模块: </label> <input type="text" name="module" placeholder="app" />可以只输入模块名，但建议补全下列信息，以免误删<br/>
+            <label>源文件名: </label> <input type="text" name="source" placeholder="upload.cpp" />支持左匹配，但还是建议补全<br/>
+            <label>告警错误码: </label> <input type="text" name="errcode" placeholder="ERROR_STD_001" >这你还能写不对？<br/>
+            <input class="btn btn-success" type="submit" value="查询"/>
+        </div>
+    </table>
+</form>
+</body>
+</html>

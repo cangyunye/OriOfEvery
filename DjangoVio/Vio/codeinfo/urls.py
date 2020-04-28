@@ -9,5 +9,7 @@ urlpatterns = [
 	path('add/', views.codeadd, name='codeadd'),
 	path('add/save/', views.codesave, name='codesave'),
 	path('results/', views.coderesults, name='coderesult'),
+	path('delete/', views.codedelete, name='coderesult'),
+	path('delete/search/', views.codedelete, name='coderesult'),
 
 ]
