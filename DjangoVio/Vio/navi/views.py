@@ -1,5 +1,5 @@
 from django.shortcuts import render,HttpResponse
-from django.http import JsonResponse
+from django.http import JsonResponse,HttpResponseRedirect
 from django.views.decorators.clickjacking import xframe_options_exempt
 from .models import MsgBoard,VisitorInfo
 from datetime import datetime
@@ -35,8 +35,8 @@ def msgsave(request):
 		msgdate = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 		model = MsgBoard(visitor=visitor, msgdate=msgdate, email=email, message=message)
 		model.save()
-		return HttpResponse(f'MsgBoard<visitor = {visitor},msgdate = {msgdate},email = {email}\n {message}')
-
+		# return HttpResponse(f'MsgBoard<visitor = {visitor},msgdate = {msgdate},email = {email}\n {message}')
+		return HttpResponseRedirect("/")
 def wttr(request):
 	headers = {'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.88 Safari/537.36',
 			   'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9'}
