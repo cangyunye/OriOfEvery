@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>添加数据</title>
+    <title>更新数据</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -19,9 +19,9 @@
     <base target="_blank">
 </head>
 <body>
-<h1>添加信息码数据</h1>
+<h1>更新信息码数据</h1>
 
-<form action="save/" method="POST" novalidate="novalidate">
+<form action="confirm/" method="POST" novalidate="novalidate">
     {% csrf_token %}
     <div class="container-fluid">
         <div class="row-cols-2">
@@ -41,7 +41,7 @@
             <label>告警错误码<strong style="color: #c82333">*</strong>: <input type="text" name="errcode"
                                                                           placeholder="ERROR_STD_001" size="50">
             </label>
-            <input class="btn btn-success" type="submit" value="提交"/>
+            <input class="btn btn-success" type="submit" value="更新"/>
 
 
         </div>

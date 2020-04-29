@@ -10,12 +10,7 @@
     <script src="https://cdn.staticfile.org/twitter-bootstrap/4.3.1/js/bootstrap.min.js"></script>
     <title>搜索结果</title>
     <style >
-        .delete-button {
-            background-image:url( {% static "codeinfo/images/close.svg" %}  );
-        }/*背景图片*/
-        .update-button {
-            background-image:url( {% static "codeinfo/images/scan read.svg" %}  );
-        }/*背景图片*/
+
     </style>
 </head>
 <body>
@@ -51,10 +46,10 @@
                 <td>{{ message.procstep }}</td>
                 <td>{{ message.upgradedate|date:'Y-m-d H:i:s' }}</td>
                 <td>
-                    <button type="button" class="delete-button" href="delete/"
+                    <button type="button" class="btn-outline-danger" href="delete/"
                             value="{{ message.id }}">删除
                     </button>
-                    <button type="button" class="update-button" href="update/" value="{{ message.id }}">更新
+                    <button type="button" class="btn-outline-success" href="update/" value="{{ message.id }}">更新
                     </button>
                 </td>
             </tr>

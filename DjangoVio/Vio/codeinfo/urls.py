@@ -10,6 +10,9 @@ urlpatterns = [
 	path('add/save/', views.codesave, name='codesave'),
 	path('results/', views.coderesults, name='coderesult'),
 	path('delete/', views.codedelete, name='coderesult'),
-	path('delete/search/', views.codedelete, name='coderesult'),
+	path('delete/confirm/', views.deleteconfirm,name='deleteconfirm'),
+	path('delete/search/', views.codesearch, name='deletesearch'),
+	path('update/',views.codemodify,name='codemodify'),
+	path('update/confirm/',views.modifyconfirm,name='modifyconfirm')
 
 ]

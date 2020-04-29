@@ -1,4 +1,5 @@
 from django.shortcuts import render,HttpResponse
+from django.http import HttpResponseRedirect
 from django.db.utils import IntegrityError
 from django.db.models import Q
 from datetime import datetime,timedelta
@@ -26,7 +27,7 @@ def deletesearch(request):
 		context = {'messages':searchresult}
 		return render(request,'codeinfo/searchresults.html',context=context)
 
-def delete(request):
+def deleteconfirm(request):
 	module = request.POST.get('module')
 	source = request.POST.get('source')
 	errcode = request.POST.get('errcode')
@@ -42,7 +43,7 @@ def delete(request):
 		CodeInfo.objects.get(source__exact=source).delete()
 	elif errcode:
 		CodeInfo.objects.get(errcode__exact=errcode).delete()
-	return HttpResponse(f'{errcode} delete success.')
+	return HttpResponse(f'from module:{module} errcode:{errcode} delete success.')
 
 def codesave(request):
 	# for spe
@@ -60,7 +61,8 @@ def codesave(request):
 					 syseffect=syseffect, sysproc=sysproc, cause=cause,procstep=procstep,upgradedate=upgradedate)
 	try:
 		model.save()
-		return HttpResponse(f'code info add successfully.from module:{module},code:{errcode}')
+		# return HttpResponse(f'Code Info add successfully.From module:{module},code:{errcode}')
+		return HttpResponseRedirect("/codeinfo/")
 	except IntegrityError as e:
 		return HttpResponse(f'{e}')
 
@@ -79,6 +81,36 @@ def codesearch(request):
 	# 设计对所有字段进行检索
 	context = CodeInfo.objects.filter(code__icontains=q)
 	return render(request,'codeinfo/results.html',context=context)
+
+def codemodify(request):
+	return render(request,"codeinfo/modify.html")
+
+def modifyconfirm(request):
+	module =  request.POST.get('module')
+	source = request.POST.get('source')
+	errcode = request.POST.get('errcode')
+	model = CodeInfo.objects.filter(Q(module__exact=module)&Q(source__exact=source)&Q(errcode__exact=errcode))
+	errattr = request.POST.get('errattr')
+	errpara = request.POST.get('errpara')
+	syseffect = request.POST.get('syseffect')
+	sysproc = request.POST.get('sysproc')
+	cause = request.POST.get('cause')
+	procstep = request.POST.get('procstep')
+	upgradedate = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+	if errattr:
+		model.update(errattr=errattr)
+	if errpara:
+		model.update(errpara=errpara)
+	if syseffect:
+		model.update(syseffect=syseffect)
+	if sysproc:
+		model.update(sysproc=sysproc)
+	if cause:
+		model.update(cause=cause)
+	if procstep:
+		model.update(procstep=procstep)
+	model.update(upgradedate=upgradedate)
+	return HttpResponse(f'update success.')
 
 def codespesave(request):
 	module =  request.POST.get('module')
@@ -115,3 +147,4 @@ def codespesearch(request):
 	# 设计对所有字段进行检索
 	context = CodeInfo.objects.filter(code__icontains=q)
 	return render(request,'codeinfo/results.html',context=context)
+
