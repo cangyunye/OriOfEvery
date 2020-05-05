@@ -27,8 +27,14 @@
             <label>源文件名: </label> <input type="text" name="source" placeholder="upload.cpp" />支持左匹配，但还是建议补全<br/>
             <label>告警错误码: </label> <input type="text" name="errcode" placeholder="ERROR_STD_001" >这你还能写不对？<br/>
             <input class="btn btn-success" type="submit" value="删除"/>
+            <input class="btn btn-primary" type="button" name="backtomain" value ="返回首页" onclick="mainpage()"/>
         </div>
     </table>
 </form>
+<script>
+    function mainpage() {
+        window.location.href='http://127.0.0.1/codeinfo'
+    }
+</script>
 </body>
 </html>

@@ -42,6 +42,7 @@
                                                                           placeholder="ERROR_STD_001" size="50">
             </label>
             <input class="btn btn-success" type="submit" value="提交"/>
+            <input class="btn btn-primary" type="button" name="backtomain" value ="返回首页" onclick="mainpage()"/>
 
 
         </div>
@@ -61,5 +62,10 @@
 
 
 </form>
+<script>
+    function mainpage() {
+        window.location.href='http://127.0.0.1/codeinfo'
+    }
+</script>
 </body>
 </html>
