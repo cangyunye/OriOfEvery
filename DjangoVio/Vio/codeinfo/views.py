@@ -1,5 +1,5 @@
 from django.shortcuts import render,HttpResponse
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect,JsonResponse
 from django.db.utils import IntegrityError
 from django.db.models import Q
 from datetime import datetime,timedelta
@@ -26,6 +26,10 @@ def deletesearch(request):
 		searchresult = CodeInfo.objects.filter(Q(module__exact=module)|Q(source__startswith=source)|Q(errcode__exact=errcode))
 		context = {'messages':searchresult}
 		return render(request,'codeinfo/searchresults.html',context=context)
+def deleteid(request):
+	id = request.GET['id']
+	CodeInfo.objects.get(pk=id).delete()
+	return HttpResponse('ok')
 
 def deleteconfirm(request):
 	module = request.POST.get('module')
