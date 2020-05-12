@@ -5,6 +5,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    {% load static %}
     <link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.3.1/css/bootstrap.min.css">
     <script src="https://cdn.staticfile.org/jquery/3.2.1/jquery.min.js"></script>
     <script src="https://cdn.staticfile.org/popper.js/1.15.0/umd/popper.min.js"></script>
@@ -27,7 +28,7 @@
         <div class="row-cols-2">
 
             <label>模块<strong style="color: #c82333">*</strong>: <input list="modules" name="module"
-                                                                       placeholder="APP"/></label>
+                                                                       placeholder="{{ message.module|default:"module" }}"/></label>
             <datalist id="modules">
                 <option value="APP">
                 <option value="BI">
@@ -35,11 +36,10 @@
                 <option value="DESIGN">
                 <option value="ENGINE">
             </datalist>
-            <label>源文件名<strong style="color: #c82333">*</strong>: <input type="text" name="source"
-                                                                         placeholder="upload.cpp"
-                                                                         size="40"/></label>
+            <label>源文件名<strong style="color: #c82333">*</strong>:
+                <input type="text" name="source" placeholder="{{ message.source|default:"sourcefile.cpp" }}" size="40"/></label>
             <label>告警错误码<strong style="color: #c82333">*</strong>: <input type="text" name="errcode"
-                                                                          placeholder="ERROR_STD_001" size="50">
+                                                                          placeholder="{{ message.errcode|default:"ERROR_STD_001" }}" size="50">
             </label>
             <input class="btn btn-success" type="submit" value="更新"/>
             <input class="btn btn-primary" type="button" name="backtomain" value ="返回首页" onclick="mainpage()"/>

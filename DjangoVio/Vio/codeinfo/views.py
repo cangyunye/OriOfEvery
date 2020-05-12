@@ -72,7 +72,7 @@ def codesave(request):
 
 def coderesults(request):
 	if request.method == "GET":
-		searchtext = CodeInfo.objects.all()
+		searchtext = CodeInfo.objects.order_by('upgradedate').reverse()[:100]
 		context = {'messages':searchtext}
 		return render(request,'codeinfo/searchresults.html',context=context)
 
@@ -83,11 +83,16 @@ def codesearch(request):
 		error_msg = '请输入关键词'
 		return HttpResponse(f"{error_msg}")
 	# 设计对所有字段进行检索
-	context = CodeInfo.objects.filter(code__icontains=q)
+	context = CodeInfo.objects.filter(errcode__icontains=q)
 	return render(request,'codeinfo/results.html',context=context)
 
 def codemodify(request):
 	return render(request,"codeinfo/modify.html")
+
+def codemodifyid(request,id):
+	message = CodeInfo.objects.get(id=id)
+	context = {'message': message }
+	return render(request,"codeinfo/modify.html",context=context)
 
 def modifyconfirm(request):
 	module =  request.POST.get('module')
