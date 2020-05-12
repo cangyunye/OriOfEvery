@@ -18,7 +18,7 @@ class CodeInfo(models.Model):
 
 	def __str__(self):
 		return f'CodeInfo<module = {self.module},source = {self.source},errcode = {self.errcode},' \
-			   f'errattr = {self.errattr},code = {self.errpara},' \
+			   f'errattr = {self.errattr},errpara = {self.errpara},' \
 			   f'syseffect = {self.syseffect},sysproc = {self.sysproc},cause = {self.cause},' \
 			   f'procstep = {self.procstep},upgradedate = {self.upgradedate}'
 

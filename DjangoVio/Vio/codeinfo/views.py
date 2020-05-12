@@ -83,8 +83,9 @@ def codesearch(request):
 		error_msg = '请输入关键词'
 		return HttpResponse(f"{error_msg}")
 	# 设计对所有字段进行检索
-	context = CodeInfo.objects.filter(errcode__icontains=q)
-	return render(request,'codeinfo/results.html',context=context)
+	searchtext = CodeInfo.objects.filter(errcode__icontains=q)
+	context = {'messages':searchtext}
+	return render(request,'codeinfo/searchresults.html',context=context)
 
 def codemodify(request):
 	return render(request,"codeinfo/modify.html")

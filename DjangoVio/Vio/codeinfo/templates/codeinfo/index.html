@@ -24,14 +24,14 @@
         <div style="text-align:center">
             <img class="img-fluid" src="{% static "codeinfo/images/codeEngine1.png" %}" alt="platform" id="platform">
         </div>
-        <form style="text-align:center" id="search-form" action="/search/" method="get" target="_self">
+        <form style="text-align:center" id="search-form" action="search/" method="get" target="_self">
             {% csrf_token %}
             <div id="search-wrapper" data-focus="false">
                 <div id="search-bar">
                     <input name="q" type="search" autocapitalize="off" autocorrect="off"
                            autocomplete="off" spellcheck="false" maxlength="70" title="Code Search" aria-label="搜索"
-                           placeholder="问题 / 关键词 / 表达式" required="" data-original="" size=70>
-                    <button class="btn btn-outline-primary" type="button">搜索</button>
+                           placeholder="请输入错误码" required="" data-original="" size=70>
+                    <input type="submit" class="btn btn-outline-primary" value="搜索" />
                 </div>
                 <ol id="search-suggestions"></ol>
             </div>
