@@ -21,14 +21,17 @@
 </head>
 <body>
 <h1>更新信息码数据</h1>
-
-<form action="confirm/" method="POST" novalidate="novalidate">
+{% if message %}
+    <form action="../confirm/" method="POST" novalidate="novalidate">
+    {% else %}
+    <form action="confirm/" method="POST" novalidate="novalidate">
+{% endif %}
     {% csrf_token %}
     <div class="container-fluid">
         <div class="row-cols-2">
 
             <label>模块<strong style="color: #c82333">*</strong>: <input list="modules" name="module"
-                                                                       placeholder="{{ message.module|default:"module" }}"/></label>
+                                                                       value="{{ message.module|default:"module" }}"/></label>
             <datalist id="modules">
                 <option value="APP">
                 <option value="BI">
@@ -37,9 +40,9 @@
                 <option value="ENGINE">
             </datalist>
             <label>源文件名<strong style="color: #c82333">*</strong>:
-                <input type="text" name="source" placeholder="{{ message.source|default:"sourcefile.cpp" }}" size="40"/></label>
+                <input type="text" name="source" value="{{ message.source|default:"sourcefile.cpp" }}" size="40"/></label>
             <label>告警错误码<strong style="color: #c82333">*</strong>: <input type="text" name="errcode"
-                                                                          placeholder="{{ message.errcode|default:"ERROR_STD_001" }}" size="50">
+                                                                          value="{{ message.errcode|default:"ERROR_STD_001" }}" size="50">
             </label>
             <input class="btn btn-success" type="submit" value="更新"/>
             <input class="btn btn-primary" type="button" name="backtomain" value ="返回首页" onclick="mainpage()"/>
@@ -53,7 +56,6 @@
             <label>告警参数: <br/><textarea class="msgbox" name="errpara">{{ message.errpara }}</textarea></label>
             <label>对系统的影响:<br/><textarea class="msgbox" name="syseffect">{{ message.syseffect }}</textarea></label>
             <label>系统自处理过程: <br/><textarea class="msgbox" name="sysproc">{{ message.sysproc }}</textarea></label>
-
             <label>可能原因: <br/> <textarea class="msgbox" name="cause">{{ message.cause }}</textarea></label>
             <label>处理步骤: <br/><textarea class="msgbox" name="procstep">{{ message.procstep }}</textarea></label>
         </div>

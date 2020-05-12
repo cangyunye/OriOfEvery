@@ -95,7 +95,7 @@ def codemodifyid(request,id):
 	return render(request,"codeinfo/modify.html",context=context)
 
 def modifyconfirm(request):
-	module =  request.POST.get('module')
+	module = request.POST.get('module')
 	source = request.POST.get('source')
 	errcode = request.POST.get('errcode')
 	model = CodeInfo.objects.filter(Q(module__exact=module)&Q(source__exact=source)&Q(errcode__exact=errcode))
