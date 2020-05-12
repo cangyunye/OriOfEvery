@@ -49,13 +49,13 @@
     </div>
     <div class="container-fluid">
         <div class="row-cols-2">
-            <label>告警属性: <br/><textarea class="msgbox" name="errattr"> </textarea></label>
-            <label>告警参数: <br/><textarea class="msgbox" name="errpara"> </textarea></label>
-            <label>对系统的影响:<br/><textarea class="msgbox" name="syseffect"> </textarea></label>
-            <label>系统自处理过程: <br/><textarea class="msgbox" name="sysproc"> </textarea></label>
+            <label>告警属性: <br/><textarea class="msgbox" name="errattr">{{ message.errattr }}</textarea></label>
+            <label>告警参数: <br/><textarea class="msgbox" name="errpara">{{ message.errpara }}</textarea></label>
+            <label>对系统的影响:<br/><textarea class="msgbox" name="syseffect">{{ message.syseffect }}</textarea></label>
+            <label>系统自处理过程: <br/><textarea class="msgbox" name="sysproc">{{ message.sysproc }}</textarea></label>
 
-            <label>可能原因: <br/> <textarea class="msgbox" name="cause"> </textarea></label>
-            <label>处理步骤: <br/><textarea class="msgbox" name="procstep"> </textarea></label>
+            <label>可能原因: <br/> <textarea class="msgbox" name="cause">{{ message.cause }}</textarea></label>
+            <label>处理步骤: <br/><textarea class="msgbox" name="procstep">{{ message.procstep }}</textarea></label>
         </div>
     </div>
 

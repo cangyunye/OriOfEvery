@@ -47,11 +47,11 @@
                             value="{{ message.id }}"><img src="{% static "codeinfo/images/delete_item.png" %}"
                                                           alt="delete" height="20" width="20"/>
                     </button>
-                    <a  href="../update/?id={{ message.id }}"><button type="button" class="btn-outline-success" value="{{ message.id }}"><img
+                    <a  href="../update/{{ message.id }}"><button type="button" class="btn-outline-success" value="{{ message.id }}"><img
                             class="img-responsive" src="{% static "codeinfo/images/edit_item.png" %}" alt="update"
                             height="20" width="20"/>
                     </button></a>
-                    <a href="../detail/?id={{ message.id }}"></a>
+                    <a href="../detail/{{ message.id }}"></a>
                     <button type="button" class="btn-outline-warning" href="detail/" value="{{ message.id }}"><img
                             class="img-responsive" src="{% static "codeinfo/images/note.png" %}" alt="detail"
                             height="20" width="20"/>
