@@ -158,3 +158,7 @@ def codespesearch(request):
 	context = CodeInfo.objects.filter(code__icontains=q)
 	return render(request,'codeinfo/results.html',context=context)
 
+def codedetail(request,id):
+	message = CodeInfo.objects.get(id=id)
+	context = {'message': message }
+	return render(request,'codeinfo/detail.html',context=context)

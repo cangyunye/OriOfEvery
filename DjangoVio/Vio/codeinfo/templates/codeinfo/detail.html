@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <title>Django-template</title>
+    <title>错误码详情页</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -10,11 +10,148 @@
     <script src="https://cdn.staticfile.org/popper.js/1.15.0/umd/popper.min.js"></script>
     <script src="https://cdn.staticfile.org/twitter-bootstrap/4.3.1/js/bootstrap.min.js"></script>
     <!--CSS样式-->
-    <style>
+    <style type="text/css">
+        #write {
+            margin: auto;
+            height: auto;
+            width: inherit;
+            word-break: normal;
+            overflow-wrap: break-word;
+            position: relative;
+            white-space: normal;
+            overflow-x: visible;
+            padding-top: 40px;
+            padding-left: 20px;
+            padding-right: 20px;
+            background: #fff;
+            border: 1px solid #ccc;
+            box-shadow: 2px 2px 2px #ccc;
+        }
+
+        #write p {
+            position: relative;
+            orphans: 4;
+            margin-top: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        p {
+            line-height: inherit;
+        }
     </style>
     <base target="_blank">
 </head>
 <body>
+<div id='write' class='container'>
+    <h1 class="display-3"><a id='errcode' href="#" style="color: #c82333"><span>告警错误码</span></a><span style="color:darkcyan">[{{ message.errcode|default:"ERROR_STD_001" }}]<span>
+    </h1>
+    <ul>
+        <li><strong><span>模块:</span></strong> {{ message.module|default:"module" }}</li>
+        <li><strong><span>源文件名:</span></strong> {{ message.source|default:"sourcefile.cpp" }}</li>
+    </ul>
+    <div class="row">
+        <div class="col-md-4">
+            <div class="alert alert-success alert-dismissible fade show"><h1><a href="#errattr" style="color:green;"
+       data-toggle="collapse" ><span>告警属性</span></a></h1>
+            </div>
+        </div>
+    </div>
+    <div class="row" id="errattr">
+        <div class="col-md-11">
+            <div class="card bg-light text-dark">
+                <div class="card-body" ><p
+                        class="text-left font-weight-normal">{{ message.errattr|default:"There is no infomation here." }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-4">
+            <div class="alert alert-secondary alert-dismissible fade show"><h1><a href="#errpara" style="color:cadetblue;"
+       data-toggle="collapse" ><span>告警参数</span></a></h1>
+            </div>
+        </div>
+    </div>
+    <div class="row" id="errpara">
+        <div class="col-md-11">
+            <div class="card bg-light text-dark">
+                <div class="card-body" ><p
+                        class="text-left font-weight-normal">{{ message.errpara|default:"There is no infomation here." }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-4">
+            <div class="alert alert-warning alert-dismissible fade show"><h1><a href="#syseffect" style="color:seagreen;"
+       data-toggle="collapse" ><span>系统影响</span></a></h1>
+            </div>
+        </div>
+    </div>
+    <div class="row" id="syseffect">
+        <div class="col-md-11">
+            <div class="card bg-light text-dark">
+                <div class="card-body" ><p
+                        class="text-left font-weight-normal">{{ message.syseffect|default:"There is no infomation here." }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+        <div class="row">
+        <div class="col-md-4">
+            <div class="alert alert-primary alert-dismissible fade show"><h1><a href="#sysproc" style="color:steelblue;"
+       data-toggle="collapse" ><span>系统处理过程</span></a></h1>
+            </div>
+        </div>
+    </div>
+    <div class="row" id="sysproc">
+        <div class="col-md-11">
+            <div class="card bg-light text-dark">
+                <div class="card-body" ><p
+                        class="text-left font-weight-normal">{{ message.sysproc|default:"There is no infomation here." }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+       <div class="row">
+        <div class="col-md-4">
+            <div class="alert alert-danger alert-dismissible fade show"><h1><a href="#cause" style="color:darkred;"
+       data-toggle="collapse" ><span>错误发生原因</span></a></h1>
+            </div>
+        </div>
+    </div>
+    <div class="row" id="cause">
+        <div class="col-md-11">
+            <div class="card bg-light text-dark">
+                <div class="card-body" ><p
+                        class="text-left font-weight-normal">{{ message.cause|default:"There is no infomation here." }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+       <div class="row">
+        <div class="col-md-4">
+            <div class="alert alert-info alert-dismissible fade show"><h1><a href="#procstep" style="color:royalblue;"
+       data-toggle="collapse" ><span>处理步骤</span></a></h1>
+            </div>
+        </div>
+    </div>
+    <div class="row" id="procstep">
+        <div class="col-md-11">
+            <div class="card bg-light text-dark">
+                <div class="card-body" ><p
+                        class="text-left font-weight-normal">{{ message.procstep|default:"There is no infomation here." }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <p class="text-center">更新时间:{{ message.upgradedate|date:'Y-m-d H:i:s' }}</p>
+</div>
 <noscript>
     <div class="card" data-type="warn">⚠️ 请启用浏览器的 JavaScript 功能</div>
 </noscript>
