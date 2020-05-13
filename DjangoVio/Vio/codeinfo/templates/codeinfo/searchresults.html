@@ -51,11 +51,11 @@
                             class="img-responsive" src="{% static "codeinfo/images/edit_item.png" %}" alt="update"
                             height="20" width="20"/>
                     </button></a>
-                    <a href="../detail/{{ message.id }}"></a>
+                    <a href="../detail/{{ message.id }}">
                     <button type="button" class="btn-outline-warning" href="detail/" value="{{ message.id }}"><img
                             class="img-responsive" src="{% static "codeinfo/images/note.png" %}" alt="detail"
                             height="20" width="20"/>
-                    </button>
+                    </button></a>
                 </td>
             </tr>
         {% endfor %}
