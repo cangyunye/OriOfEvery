@@ -122,7 +122,9 @@ def modifyconfirm(request):
 	if procstep:
 		model.update(procstep=procstep)
 	model.update(upgradedate=upgradedate)
-	return HttpResponse(f'update success.')
+	id = model[0].id
+	msg = f'<script type="text/javascript">alert("修改成功");window.location.href="/codeinfo/detail/{id}";</script>'
+	return HttpResponse(msg)
 
 def codespesave(request):
 	module =  request.POST.get('module')

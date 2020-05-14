@@ -16,7 +16,7 @@
         }
     </style>
 
-    <base target="_blank">
+    <base target="_self">
 </head>
 <body>
 <h1>添加信息码数据</h1>
@@ -25,9 +25,8 @@
     {% csrf_token %}
     <div class="container-fluid">
         <div class="row-cols-2">
-
             <label>模块<strong style="color: #c82333">*</strong>: <input list="modules" name="module"
-                                                                       placeholder="APP"/></label>
+               minlength="1" maxlength="20" placeholder="APP"/></label>
             <datalist id="modules">
                 <option value="APP">
                 <option value="BI">
@@ -36,12 +35,12 @@
                 <option value="ENGINE">
             </datalist>
             <label>源文件名<strong style="color: #c82333">*</strong>: <input type="text" name="source"
-                                                                         placeholder="upload.cpp"
+            minlength="1" maxlength="20" placeholder="upload.cpp"
                                                                          size="40"/></label>
             <label>告警错误码<strong style="color: #c82333">*</strong>: <input type="text" name="errcode"
-                                                                          placeholder="ERROR_STD_001" size="50">
+            minlength="1" maxlength="20" placeholder="ERROR_STD_001" size="50">
             </label>
-            <input class="btn btn-success" type="submit" value="提交"/>
+            <input id="btn_add" class="btn btn-success" type="submit" value="提交"/>
             <input class="btn btn-primary" type="button" name="backtomain" value ="返回首页" onclick="mainpage()"/>
 
 
@@ -62,9 +61,19 @@
 
 
 </form>
-<script>
+<script type="text/javascript">
+    window.onload = function() {
+      var txt_submit = document.getElementsByName("errattr");
+      var btn_submit = document.getElementById("btn_add");
+      btn_submit.onclick = function() {
+          var strText = txt_submit.value;
+          if ("" === strText){
+              alert("该输入项为空")
+          }
+      }
+    };
     function mainpage() {
-        window.location.href='http://127.0.0.1/codeinfo'
+        window.location.href='/codeinfo'
     }
 </script>
 </body>
