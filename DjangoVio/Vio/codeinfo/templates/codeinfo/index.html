@@ -16,21 +16,20 @@
 </head>
 <body data-layout="home">
 <div class="container-fluid" id="curtain">
-    <div style="text-align:center">
-        <img class="img-fluid" src="{% static "codeinfo/images/platform4.png" %}" alt="platform" id="platform">
-    </div>
+{#    <div style="text-align:center">#}
+{#        <img class="img-fluid" src="{% static "codeinfo/images/platform4.png" %}" alt="platform" id="platform">#}
+{#    </div>#}
 
     <header id="header">
         <div style="text-align:center">
-            <img class="img-fluid" src="{% static "codeinfo/images/codeEngine1.png" %}" alt="platform" id="platform">
+            <img class="img-fluid" src="{% static "codeinfo/images/greengirl.jpg" %}" alt="navipic" id="platform" height="80" width="600">
         </div>
         <form style="text-align:center" id="search-form" action="search/" method="get" target="_self">
             {% csrf_token %}
             <div id="search-wrapper" data-focus="false">
                 <div id="search-bar">
-                    <input name="q" type="search" autocapitalize="off" autocorrect="off"
-                           autocomplete="off" spellcheck="false" maxlength="70" title="Code Search" aria-label="搜索"
-                           placeholder="请输入错误码" required="" data-original="" size=70>
+                    <input name="q" type="search" minlength="1" maxlength="20" title="Code Search" aria-label="搜索"
+                           placeholder="请输入错误码"  size=70>
                     <input type="submit" class="btn btn-outline-primary" value="搜索" />
                 </div>
                 <ol id="search-suggestions"></ol>
@@ -41,10 +40,7 @@
 <div class="container-fluid" id="content">
     <div style="text-align:center">
         <section id="home">
-            <noscript>
-                <div class="card" data-type="warn">⚠️ 请启用浏览器的 JavaScript 功能</div>
-            </noscript>
-            <div id="intro"><a href="#">🎉 欢迎使用 CodeInfo, 点击了解更多</a>
+            <div id="intro"><a>🎉 欢迎使用 CodeInfo, 右侧点击，有你想要</a>
                 <button type="button" class="btn btn-danger dropdown-toggle" data-toggle="dropdown">词条操作
                 </button>
                 <div class="dropdown-menu">
@@ -72,5 +68,8 @@
         </footer>
     </div>
 </div>
+<noscript>
+    <div class="card" data-type="warn">⚠️ 请启用浏览器的 JavaScript 功能</div>
+</noscript>
 </body>
 </html>

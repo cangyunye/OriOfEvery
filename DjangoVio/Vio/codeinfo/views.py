@@ -1,5 +1,4 @@
 from django.shortcuts import render,HttpResponse
-from django.http import HttpResponseRedirect,JsonResponse
 from django.db.utils import IntegrityError
 from django.db.models import Q
 from datetime import datetime,timedelta
@@ -65,10 +64,13 @@ def codesave(request):
 					 syseffect=syseffect, sysproc=sysproc, cause=cause,procstep=procstep,upgradedate=upgradedate)
 	try:
 		model.save()
+		id = model.id
 		# return HttpResponse(f'Code Info add successfully.From module:{module},code:{errcode}')
-		return HttpResponseRedirect("/codeinfo/")
+		msg = f'<script type="text/javascript">alert("提交成功");window.location.href="/codeinfo/detail/{id}";</script>'
+		return HttpResponse(msg)
 	except IntegrityError as e:
-		return HttpResponse(f'{e}')
+		msg = f'<p>{e}</p><script type="text/javascript">alert("提交失败");</script>'
+		return HttpResponse(msg)
 
 def coderesults(request):
 	if request.method == "GET":
@@ -80,7 +82,7 @@ def codesearch(request):
 	q = request.GET.get('q')
 	error_msg = ''
 	if not q:
-		error_msg = '请输入关键词'
+		error_msg = '<script type="text/javascript">alert("这！...-_-!");alert("不会说话，难道还不能打个字吗？");alert("回去再谈");window.location.href="/";</script>'
 		return HttpResponse(f"{error_msg}")
 	# 设计对所有字段进行检索
 	searchtext = CodeInfo.objects.filter(errcode__icontains=q)
