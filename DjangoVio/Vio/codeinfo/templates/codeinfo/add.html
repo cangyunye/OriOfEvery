@@ -42,8 +42,6 @@
             </label>
             <input id="btn_add" class="btn btn-success" type="submit" value="提交"/>
             <input class="btn btn-primary" type="button" name="backtomain" value ="返回首页" onclick="mainpage()"/>
-
-
         </div>
 
     </div>
@@ -62,16 +60,6 @@
 
 </form>
 <script type="text/javascript">
-    window.onload = function() {
-      var txt_submit = document.getElementsByName("errattr");
-      var btn_submit = document.getElementById("btn_add");
-      btn_submit.onclick = function() {
-          var strText = txt_submit.value;
-          if ("" === strText){
-              alert("该输入项为空")
-          }
-      }
-    };
     function mainpage() {
         window.location.href='/codeinfo'
     }

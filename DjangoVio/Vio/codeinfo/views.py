@@ -53,12 +53,28 @@ def codesave(request):
 	module = request.POST.get('module')
 	source = request.POST.get('source')
 	errcode = request.POST.get('errcode')
+	err_msg = ''
 	errattr = request.POST.get('errattr')
+	if len(errattr) > 50:
+		err_msg = "告警属性超过50字符"
 	errpara = request.POST.get('errpara')
+	if len(errpara) > 50:
+		err_msg = err_msg + "<p>告警参数超过50字符</p>"
 	syseffect = request.POST.get('syseffect')
+	if len(syseffect) > 512:
+		err_msg = err_msg + "<p>系统影响超过512字符</p>"
 	sysproc = request.POST.get('sysproc')
+	if len(sysproc) > 512:
+		err_msg = err_msg + "<p>系统处理过程超过512字符</p>"
 	cause = request.POST.get('cause')
+	if len(cause) > 512:
+		err_msg = err_msg + "<p>可能原因超过512字符</p>"
 	procstep = request.POST.get('procstep')
+	if len(procstep) > 256:
+		err_msg = err_msg + "<p>处理步骤超过256字符</p>"
+	if len(err_msg)>0:
+		err_msg = '<H1>报错信息如下</H1>' + err_msg
+		return HttpResponse(err_msg)
 	upgradedate = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 	model = CodeInfo(module=module, source=source, errcode=errcode, errattr=errattr, errpara=errpara,
 					 syseffect=syseffect, sysproc=sysproc, cause=cause,procstep=procstep,upgradedate=upgradedate)
@@ -102,13 +118,31 @@ def modifyconfirm(request):
 	source = request.POST.get('source')
 	errcode = request.POST.get('errcode')
 	model = CodeInfo.objects.filter(Q(module__exact=module)&Q(source__exact=source)&Q(errcode__exact=errcode))
+	err_msg = ''
 	errattr = request.POST.get('errattr')
+	if len(errattr) > 50:
+		err_msg = "告警属性超过50字符"
 	errpara = request.POST.get('errpara')
+	if len(errpara) > 50:
+		err_msg = err_msg + "<p>告警参数超过50字符</p>"
 	syseffect = request.POST.get('syseffect')
+	if len(syseffect) > 512:
+		err_msg = err_msg + "<p>系统影响超过512字符</p>"
 	sysproc = request.POST.get('sysproc')
+	if len(sysproc) > 512:
+		err_msg = err_msg + "<p>系统处理过程超过512字符</p>"
 	cause = request.POST.get('cause')
+	if len(cause) > 512:
+		err_msg = err_msg + "<p>可能原因超过512字符</p>"
 	procstep = request.POST.get('procstep')
+	if len(procstep) > 256:
+		err_msg = err_msg + "<p>处理步骤超过256字符</p>"
+	if len(err_msg)>0:
+		err_msg = '<H1>报错信息如下</H1>' + err_msg
+		return HttpResponse(err_msg)
 	upgradedate = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+
 	if errattr:
 		model.update(errattr=errattr)
 	if errpara:
@@ -121,7 +155,16 @@ def modifyconfirm(request):
 		model.update(cause=cause)
 	if procstep:
 		model.update(procstep=procstep)
+
 	model.update(upgradedate=upgradedate)
+	# model[0].errattr = errattr
+	# model[0].errpara = errpara
+	# model[0].syseffect = syseffect
+	# model[0].sysproc = sysproc
+	# model[0].cause = cause
+	# model[0].procstep = procstep
+	# model[0].upgradedate = upgradedate
+	# model[0].save()
 	id = model[0].id
 	msg = f'<script type="text/javascript">alert("修改成功");window.location.href="/codeinfo/detail/{id}";</script>'
 	return HttpResponse(msg)
