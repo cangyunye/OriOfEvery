@@ -11,61 +11,79 @@
     <title>搜索结果</title>
 </head>
 <body>
-
-<table class="table table-striped table-bordered table-hover table-condensed">
-    <thead>
-    <tr class="danger">
-        <th>模块</th>
-        <th>源文件名</th>
-        <th>告警错误码</th>
-        <th>告警属性</th>
-        <th>告警参数</th>
-        <th>对系统影响</th>
-        <th>系统处理</th>
-        <th>原因</th>
-        <th>处理步骤</th>
-        <th>更新时间</th>
-        <th>操作</th>
-    </tr>
-    </thead>
-    <tbody>
-    {% if messages %}
-        {% for message in messages %}
-            <tr class="{% cycle 'active' 'success' 'warning' 'info' %}">
-                <td>{{ message.module }}</td>
-                <td>{{ message.source }}</td>
-                <td>{{ message.errcode }}</td>
-                <td>{{ message.errattr }}</td>
-                <td>{{ message.errpara }}</td>
-                <td>{{ message.syseffect }}</td>
-                <td>{{ message.sysproc }}</td>
-                <td>{{ message.cause }}</td>
-                <td>{{ message.procstep }}</td>
-                <td>{{ message.upgradedate|date:'Y-m-d H:i:s' }}</td>
-                <td>
-                    <button type="button" class="delete-button btn-outline-danger"
-                            value="{{ message.id }}"><img src="{% static "codeinfo/images/delete_item.png" %}"
-                                                          alt="delete" height="20" width="20"/>
-                    </button>
-                    <a  href="../update/{{ message.id }}"><button type="button" class="btn-outline-success" value="{{ message.id }}"><img
-                            class="img-responsive" src="{% static "codeinfo/images/edit_item.png" %}" alt="update"
-                            height="20" width="20"/>
-                    </button></a>
-                    <a href="../detail/{{ message.id }}">
-                    <button type="button" class="btn-outline-warning" href="detail/" value="{{ message.id }}"><img
-                            class="img-responsive" src="{% static "codeinfo/images/note.png" %}" alt="detail"
-                            height="20" width="20"/>
-                    </button></a>
-                </td>
-            </tr>
-        {% endfor %}
-    {% else %}
-        <tr>
-            <td colspan="4">无数据</td>
+<div class="container">
+    <div style='position:relative; z-index:999; top: 0;);'>
+{#    <div class="row" >#}
+    <header id="header">
+        <form style="text-align:center" id="search-form" action="../search/" method="get" target="_self">
+            {% csrf_token %}
+            <div id="search-wrapper" data-focus="false">
+                <div id="search-bar">
+                    <input name="q" type="search" minlength="1" maxlength="20" title="Code Search" aria-label="搜索"
+                           placeholder="请输入错误码"  size=70>
+                    <input type="submit" class="btn btn-outline-primary" value="搜索" />
+                </div>
+                <ol id="search-suggestions"></ol>
+            </div>
+        </form>
+    </header>
+        <div class="sepline" style="margin-top:20px;line-height:16px;border-top:1px solid #D2E9F4"></div>
+    </div>
+    <div class="row">
+        <div id="result-stats">
+            找到约 5,820,000 条结果 （用时 0.47 秒）
+        </div>
+        <table class="table table-striped table-bordered table-hover table-condensed">
+        <thead>
+        <tr class="danger">
+            <th>模块</th>
+            <th>源文件名</th>
+            <th>告警错误码</th>
+            <th>告警属性</th>
+            <th>告警参数</th>
+            <th>对系统影响</th>
+            <th>更新时间</th>
+            <th>操作</th>
         </tr>
-    {% endif %}
-    </tbody>
-</table>
+        </thead>
+        <tbody>
+        {% if messages %}
+            {% for message in messages %}
+                <tr class="{% cycle 'active' 'success' 'warning' 'info' %}">
+                    <td>{{ message.module }}</td>
+                    <td>{{ message.source }}</td>
+                    <td>{{ message.errcode }}</td>
+                    <td>{{ message.errattr }}</td>
+                    <td>{{ message.errpara }}</td>
+                    <td>{{ message.syseffect }}</td>
+                    <td>{{ message.upgradedate|date:'Y-m-d H:i:s' }}</td>
+                    <td>
+                        <button type="button" class="delete-button btn-outline-danger"
+                                value="{{ message.id }}"><img src="{% static "codeinfo/images/delete_item.png" %}"
+                                                              alt="delete" height="20" width="20"/>
+                        </button>
+                        <a  href="../update/{{ message.id }}"><button type="button" class="btn-outline-success" value="{{ message.id }}"><img
+                                class="img-responsive" src="{% static "codeinfo/images/edit_item.png" %}" alt="update"
+                                height="20" width="20"/>
+                        </button></a>
+                        <a href="../detail/{{ message.id }}">
+                        <button type="button" class="btn-outline-warning" href="detail/" value="{{ message.id }}"><img
+                                class="img-responsive" src="{% static "codeinfo/images/note.png" %}" alt="detail"
+                                height="20" width="20"/>
+                        </button></a>
+                    </td>
+                </tr>
+            {% endfor %}
+        {% else %}
+            <tr>
+                <td colspan="4">无数据</td>
+            </tr>
+        {% endif %}
+        </tbody>
+    </table>
+    </div>
+</div>
+
 </body>
 <script>
     $(function () {
