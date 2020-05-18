@@ -44,7 +44,7 @@
 <body>
 <div id='write' class='container'>
     <h1 class="display-3"><a id='errcode' href='/codeinfo' style="color: #c82333"><span>告警错误码</span></a><a href="/codeinfo/update/{{ message.id }}"><span
-            style="color:darkcyan">[{{ message.errcode|default:"ERROR_STD_001" }}]<span></a>
+            style="color:darkcyan">[{{ message.errcode|default:"ERROR_STD_001" }}]</span></a>
     </h1>
     <ul>
         <li><strong><span>模块:</span></strong> {{ message.module|default:"module" }}</li>
@@ -61,8 +61,8 @@
     <div class="row" id="errattr">
         <div class="col-md-11">
             <div class="card bg-light text-dark">
-                <div class="card-body"><p
-                        class="text-left font-weight-normal">{{ message.errattr|default:"There is no infomation here." }}</p>
+                <div class="card-body"><span
+                        class="text-left font-weight-normal">{{ message.errattr|default:"There is no infomation here." }}</span>
                 </div>
             </div>
         </div>
@@ -79,8 +79,8 @@
     <div class="row" id="errpara">
         <div class="col-md-11">
             <div class="card bg-light text-dark">
-                <div class="card-body"><p
-                        class="text-left font-weight-normal">{{ message.errpara|default:"There is no infomation here." }}</p>
+                <div class="card-body"><span
+                        class="text-left font-weight-normal">{{ message.errpara|default:"There is no infomation here." }}</span>
                 </div>
             </div>
         </div>

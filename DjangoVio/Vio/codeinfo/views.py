@@ -1,7 +1,8 @@
-from django.shortcuts import render,HttpResponse
+from django.shortcuts import render,HttpResponse,HttpResponseRedirect
 from django.db.utils import IntegrityError
 from django.db.models import Q
 from datetime import datetime,timedelta
+from django.core.exceptions import ObjectDoesNotExist
 from .models import CodeInfo,CodeInfoSpe
 # Create your views here.
 def index(request):
@@ -24,7 +25,7 @@ def deletesearch(request):
 	if request.method == "GET":
 		searchresult = CodeInfo.objects.filter(Q(module__exact=module)|Q(source__startswith=source)|Q(errcode__exact=errcode))
 		context = {'messages':searchresult}
-		return render(request,'codeinfo/searchresults.html',context=context)
+		return HttpResponseRedirect('codeinfo/results', context=context)
 def deleteid(request):
 	id = request.GET['id']
 	CodeInfo.objects.get(pk=id).delete()
@@ -34,19 +35,23 @@ def deleteconfirm(request):
 	module = request.POST.get('module')
 	source = request.POST.get('source')
 	errcode = request.POST.get('errcode')
-	if module and source and errcode:
-		CodeInfo.objects.get(Q(module__exact=module)&Q(source__exact=source)&Q(errcode__exact=errcode)).delete()
-	elif module and source :
-		CodeInfo.objects.get(Q(module__exact=module)&Q(source__exact=source)).delete()
-	elif source and errcode :
-		CodeInfo.objects.get(Q(source__exact=source)&Q(errcode__exact=errcode)).delete()
-	elif module:
-		CodeInfo.objects.get(module__exact=module).delete()
-	elif source:
-		CodeInfo.objects.get(source__exact=source).delete()
-	elif errcode:
-		CodeInfo.objects.get(errcode__exact=errcode).delete()
-	return HttpResponse(f'from module:{module} errcode:{errcode} delete success.')
+	try:
+		if module and source and errcode:
+			CodeInfo.objects.get(Q(module__exact=module)&Q(source__exact=source)&Q(errcode__exact=errcode)).delete()
+		elif module and source :
+			CodeInfo.objects.get(Q(module__exact=module)&Q(source__exact=source)).delete()
+		elif source and errcode :
+			CodeInfo.objects.get(Q(source__exact=source)&Q(errcode__exact=errcode)).delete()
+		elif module:
+			CodeInfo.objects.get(module__exact=module).delete()
+		elif source:
+			CodeInfo.objects.get(source__exact=source).delete()
+		elif errcode:
+			CodeInfo.objects.get(errcode__exact=errcode).delete()
+		# msg = "from module:{module} errcode:{errcode} delete success."
+		return HttpResponse('<script type="text/javascript">alert("删除成功");</script>')
+	except ObjectDoesNotExist as e:
+		return HttpResponse('<script type="text/javascript">alert("数据不存在，删除失败");</script>')
 
 def codesave(request):
 	# for spe
@@ -56,7 +61,7 @@ def codesave(request):
 	err_msg = ''
 	errattr = request.POST.get('errattr')
 	if len(errattr) > 50:
-		err_msg = "告警属性超过50字符"
+		err_msg = "<p>告警属性超过50字符</p>"
 	errpara = request.POST.get('errpara')
 	if len(errpara) > 50:
 		err_msg = err_msg + "<p>告警参数超过50字符</p>"
@@ -91,7 +96,9 @@ def codesave(request):
 def coderesults(request):
 	if request.method == "GET":
 		searchtext = CodeInfo.objects.order_by('upgradedate').reverse()[:100]
-		context = {'messages':searchtext}
+		count = searchtext.count()
+		context = {'messages':searchtext,
+				   'resultscount':count}
 		return render(request,'codeinfo/searchresults.html',context=context)
 
 def codesearch(request):
@@ -102,7 +109,9 @@ def codesearch(request):
 		return HttpResponse(f"{error_msg}")
 	# 设计对所有字段进行检索
 	searchtext = CodeInfo.objects.filter(errcode__icontains=q)
-	context = {'messages':searchtext}
+	count = searchtext.count()
+	context = {'messages':searchtext,
+			   'resultscount':count}
 	return render(request,'codeinfo/searchresults.html',context=context)
 
 def codemodify(request):
@@ -121,7 +130,7 @@ def modifyconfirm(request):
 	err_msg = ''
 	errattr = request.POST.get('errattr')
 	if len(errattr) > 50:
-		err_msg = "告警属性超过50字符"
+		err_msg = "<p>告警属性超过50字符</p>"
 	errpara = request.POST.get('errpara')
 	if len(errpara) > 50:
 		err_msg = err_msg + "<p>告警参数超过50字符</p>"
