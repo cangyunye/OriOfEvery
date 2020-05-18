@@ -12,7 +12,7 @@
     <script src="{% static 'navi/popper.js/dist/umd/popper.min.js' %}"></script>
     <script src="{% static 'navi/bootstrap/dist/js/bootstrap.min.js' %}"></script>
     <!--提示框-->
-    <style>
+    <style type="text/css">
         body {
             background: url({% static 'navi/images/bg.png' %}) repeat;
         }
@@ -113,10 +113,12 @@
                             <a href="https://dormousehole.readthedocs.io/en/latest/quickstart.html">flask-quickstart</a><br>
                             <a href="https://python3-cookbook.readthedocs.io/zh_CN/latest/" data-toggle="tooltip"
                                title="很多python的Tricks"><strong>python-cookbook</strong></a><br>
-                            <a href="https://docs.djangoproject.com/en/3.0/">go学习</a><br>
+                            <a href="https://docs.djangoproject.com/en/3.0/">django官方文档</a><br>
                             <a href="https://leetcode-cn.com" data-toggle="tooltip" title="懵逼树下懵逼果，懵逼树下没有我"><strong>leetcode</strong>算法挑战</a><br>
                             <a href="http://how2j.cn/stage/12.html">java好好学</a><br>
                             <a href="http://c.biancheng.net/golang/">go学习</a><br>
+                            <a href="http://oeasy.org/">o老师</a><br>
+
                         </div>
                     </div>
                 </div>
@@ -162,7 +164,8 @@
                             <p class="text-info">还找软件？</p><br>
                             <img class="img-fluid" src="{% static "navi/images/portfolio7.jpg" %}" alt="">
                             <a href="https://www.iconfont.cn/">阿里巴巴图标库</a><br>
-                            <a href="#" data-toggle="tooltip" title="和编程相关的软件!">REPOTOOL</a><br>
+                            <a href="https://unsplash.com/" data-toggle="tooltip" title="好多好看的壁纸!">unsplash</a><br>
+                            <a href="https://www.pexels.com/" data-toggle="tooltip" title="好多好看的壁纸!">pexels</a><br>
 
                         </div>
                     </div>
@@ -367,30 +370,21 @@
                 width=400 height=400
                 frameborder=1 name="messageboard" scrolling="auto">
                 </iframe-->
-                <table class="table table-striped table-bordered table-hover table-condensed">
-                    <thead>
-                    <tr class="danger">
-                        <th>date</th>
-                        <th>visitor</th>
-                        <th>message</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    {% if messages %}
-                        {% for message in messages %}
-                            <tr class="{% cycle 'active' 'success' 'warning' 'info' %}">
-                                <td>{{ message.msgdate|date:'Y-m-d H:i:s' }}</td>
-                                <td>{{ message.visitor }}</td>
-                                <td>{{ message.message }}</td>
-                            </tr>
-                        {% endfor %}
-                    {% else %}
-                        <tr>
-                            <td colspan="4">无数据</td>
-                        </tr>
-                    {% endif %}
-                    </tbody>
-                </table>
+
+                {% if messages %}
+                    {% for message in messages %}
+                        <h1 style="color:deepskyblue">{{ message.visitor }}</h1>
+                        <abbr>{{ message.msgdate|date:'Y-m-d H:i:s' }}</abbr>
+                        <ul class="list-group">
+                            <li class="list-group-item list-group-item-info">{{ message.message }}</li>
+                        </ul>
+
+                    {% endfor %}
+                {% else %}
+                    <p>无数据</p>
+                {% endif %}
+
+
                 <form action="msgb/save/" method="POST" novalidate="novalidate">
                     {% csrf_token %}
                     <table class="table table-striped table-bordered table-hover table-condensed">
@@ -399,8 +393,8 @@
                             <label>邮 件: </label> <input type="text" name="email" placeholder="xxxx@gmail.com"/><br/>
                             <label>内 容: </label> <textarea class="msgbox" name="message"> </textarea>
                             <input class="btn btn-success" type="submit" value="留言" target="_self"/><a href="msgb/"
-                                                                                        class="btn btn-warning"
-                                                                                        role="button">看看其他小伙伴说了啥</a>
+                                                                                                       class="btn btn-warning"
+                                                                                                       role="button">看看其他小伙伴说了啥</a>
                         </div>
                     </table>
                 </form>
