@@ -28,28 +28,41 @@ def deletesearch(request):
 		return HttpResponseRedirect('codeinfo/results', context=context)
 def deleteid(request):
 	id = request.GET['id']
-	CodeInfo.objects.get(pk=id).delete()
-	return HttpResponse('ok')
+	result=CodeInfo.objects.get(pk=id)
+	if result.upgradedate+timedelta(minutes=10)<=datetime.now():
+		result.delete()
+		# 这里回复ok会有searchresults.html的js校验，别乱改
+		return HttpResponse('ok')
+	else:
+		return HttpResponse('<script type="text/javascript"> alert("10分钟以上数据不允许删除，请联系管理员");window.location.href="/codeinfo/delete"</script>')
+
 
 def deleteconfirm(request):
 	module = request.POST.get('module')
 	source = request.POST.get('source')
 	errcode = request.POST.get('errcode')
 	try:
+		result=''
 		if module and source and errcode:
-			CodeInfo.objects.get(Q(module__exact=module)&Q(source__exact=source)&Q(errcode__exact=errcode)).delete()
+			result=CodeInfo.objects.get(Q(module__exact=module)&Q(source__exact=source)&Q(errcode__exact=errcode))
 		elif module and source :
-			CodeInfo.objects.get(Q(module__exact=module)&Q(source__exact=source)).delete()
+			result=CodeInfo.objects.get(Q(module__exact=module)&Q(source__exact=source))
 		elif source and errcode :
-			CodeInfo.objects.get(Q(source__exact=source)&Q(errcode__exact=errcode)).delete()
+			result=CodeInfo.objects.get(Q(source__exact=source)&Q(errcode__exact=errcode))
 		elif module:
-			CodeInfo.objects.get(module__exact=module).delete()
+			return HttpResponse('<script type="text/javascript">alert("不允许仅按模块删除");</script>')
 		elif source:
-			CodeInfo.objects.get(source__exact=source).delete()
+			return HttpResponse('<script type="text/javascript">alert("不允许仅按源文件删除");</script>')
 		elif errcode:
-			CodeInfo.objects.get(errcode__exact=errcode).delete()
-		# msg = "from module:{module} errcode:{errcode} delete success."
-		return HttpResponse('<script type="text/javascript">alert("删除成功");</script>')
+			result=CodeInfo.objects.get(errcode__exact=errcode)
+		if result.upgradedate + timedelta(minutes=10) <= datetime.now():
+			result.delete()
+			# msg = "from module:{module} errcode:{errcode} delete success."
+			return HttpResponse('<script type="text/javascript">alert("删除成功");</script>')
+		else:
+			return HttpResponse(
+				'<script type="text/javascript"> alert("10分钟以上数据不允许删除，请联系管理员");window.location.href="/codeinfo/delete"</script>')
+
 	except ObjectDoesNotExist as e:
 		return HttpResponse('<script type="text/javascript">alert("数据不存在，删除失败");</script>')
 
@@ -78,7 +91,7 @@ def codesave(request):
 	if len(procstep) > 256:
 		err_msg = err_msg + "<p>处理步骤超过256字符</p>"
 	if len(err_msg)>0:
-		err_msg = '<H1>报错信息如下</H1>' + err_msg
+		err_msg = '<h1>报错信息如下</h1>' + err_msg
 		return HttpResponse(err_msg)
 	upgradedate = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 	model = CodeInfo(module=module, source=source, errcode=errcode, errattr=errattr, errpara=errpara,
@@ -99,6 +112,16 @@ def coderesults(request):
 		count = searchtext.count()
 		context = {'messages':searchtext,
 				   'resultscount':count}
+		return render(request,'codeinfo/searchresults.html',context=context)
+
+def coderesultpagin(request,page):
+	if request.method == "GET":
+		searchtext = CodeInfo.objects.order_by('upgradedate').reverse()
+		count = searchtext.count()
+		messages = searchtext[5*(page-1):5*page]
+		context = {'messages':messages,
+				   'resultscount':count,
+				   'page':page}
 		return render(request,'codeinfo/searchresults.html',context=context)
 
 def codesearch(request):
@@ -147,33 +170,32 @@ def modifyconfirm(request):
 	if len(procstep) > 256:
 		err_msg = err_msg + "<p>处理步骤超过256字符</p>"
 	if len(err_msg)>0:
-		err_msg = '<H1>报错信息如下</H1>' + err_msg
+		err_msg = '<h1>报错信息如下</h1>' + err_msg
 		return HttpResponse(err_msg)
+	mdict = {}
+	if errattr and errattr!=model[0].errattr:
+		mdict.update({'errattr':errattr})
+		# model.update(errattr=errattr)
+	if errpara and errpara!=model[0].errpara:
+		mdict.update({'errpara':errpara})
+		# model.update(errpara=errpara)
+	if syseffect and syseffect!=model[0].syseffect:
+		mdict.update({'syseffect': syseffect})
+		# model.update(syseffect=syseffect)
+	if sysproc and sysproc!=model[0].sysproc:
+		mdict.update({'sysproc': sysproc})
+		# model.update(sysproc=sysproc)
+	if cause and cause!=model[0].cause:
+		mdict.update({'cause': cause})
+		# model.update(cause=cause)
+	if procstep and procstep!=model[0].procstep:
+		mdict.update({'procstep': procstep})
+		# model.update(procstep=procstep)
+	if len(mdict)==0:
+		return HttpResponse(f'<script type="text/javascript">alert("无改动");</script>')
 	upgradedate = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-
-	if errattr:
-		model.update(errattr=errattr)
-	if errpara:
-		model.update(errpara=errpara)
-	if syseffect:
-		model.update(syseffect=syseffect)
-	if sysproc:
-		model.update(sysproc=sysproc)
-	if cause:
-		model.update(cause=cause)
-	if procstep:
-		model.update(procstep=procstep)
-
-	model.update(upgradedate=upgradedate)
-	# model[0].errattr = errattr
-	# model[0].errpara = errpara
-	# model[0].syseffect = syseffect
-	# model[0].sysproc = sysproc
-	# model[0].cause = cause
-	# model[0].procstep = procstep
-	# model[0].upgradedate = upgradedate
-	# model[0].save()
+	mdict.update({'upgradedate': upgradedate})
+	model.update(**mdict)
 	id = model[0].id
 	msg = f'<script type="text/javascript">alert("修改成功");window.location.href="/codeinfo/detail/{id}";</script>'
 	return HttpResponse(msg)
