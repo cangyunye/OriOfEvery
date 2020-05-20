@@ -26,6 +26,7 @@ def deletesearch(request):
 		searchresult = CodeInfo.objects.filter(Q(module__exact=module)|Q(source__startswith=source)|Q(errcode__exact=errcode))
 		context = {'messages':searchresult}
 		return HttpResponseRedirect('codeinfo/results', context=context)
+
 def deleteid(request):
 	id = request.GET['id']
 	result=CodeInfo.objects.get(pk=id)
@@ -110,19 +111,61 @@ def coderesults(request):
 	if request.method == "GET":
 		searchtext = CodeInfo.objects.order_by('upgradedate').reverse()[:100]
 		count = searchtext.count()
+		# 每页10个
+		pagenums = 10
+		pages,left = divmod(count,pagenums)
+		Pre = 1
+		Next = 2
 		context = {'messages':searchtext,
-				   'resultscount':count}
+				   'resultscount':count,
+				   'pages':range(1,pages+2),
+				   'page':1,
+				   'Pre':Pre,
+				   'Next':Next}
 		return render(request,'codeinfo/searchresults.html',context=context)
 
-def coderesultpagin(request,page):
+def coderesultpagin(request,page=1):
 	if request.method == "GET":
 		searchtext = CodeInfo.objects.order_by('upgradedate').reverse()
 		count = searchtext.count()
-		messages = searchtext[5*(page-1):5*page]
+		# 每页10个
+		pagenums = 10
+		pages,left = divmod(count,pagenums)
+
+		if count <= pagenums:
+			page = 1
+			Pre = 1
+			Next = 1
+			messages = searchtext
+		elif page<1:
+			page = 1
+			Pre = 1
+			Next = 1
+			messages = searchtext[(page - 1) * pagenums:page * pagenums]
+		elif page > pages and left >0 :
+			page = pages + 1
+			Pre = page - 1
+			Next = page
+			messages = searchtext[(page - 1) * pagenums:]
+		elif page > pages and left == 0:
+			page = pages
+			Pre = page - 1
+			Next = page
+			messages = searchtext[(page - 1) * pagenums:]
+		else:
+			page = page
+			Pre = page - 1
+			Next = page + 1
+			messages = searchtext[(page - 1) * pagenums:page * pagenums]
+
 		context = {'messages':messages,
 				   'resultscount':count,
-				   'page':page}
+				   'pages':range(1,pages+2),
+				   'page':page,
+				   'Pre':Pre,
+				   'Next':Next}
 		return render(request,'codeinfo/searchresults.html',context=context)
+
 
 def codesearch(request):
 	q = request.GET.get('q')
