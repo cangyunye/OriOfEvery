@@ -65,7 +65,7 @@ def deleteconfirm(request):
 				'<script type="text/javascript"> alert("10分钟以上数据不允许删除，请联系管理员");window.location.href="/codeinfo/delete"</script>')
 
 	except ObjectDoesNotExist as e:
-		return HttpResponse('<script type="text/javascript">alert("数据不存在，删除失败");</script>')
+		return HttpResponse('<script type="text/javascript">alert("数据不存在，删除失败");window.location.href="/codeinfo/delete/;</script>')
 
 def codesave(request):
 	# for spe
@@ -104,7 +104,7 @@ def codesave(request):
 		msg = f'<script type="text/javascript">alert("提交成功");window.location.href="/codeinfo/detail/{id}";</script>'
 		return HttpResponse(msg)
 	except IntegrityError as e:
-		msg = f'<p>{e}</p><script type="text/javascript">alert("提交失败");</script>'
+		msg = f'<p>{e}</p><script type="text/javascript">alert("提交失败");window.location.href="/codeinfo/delete/;</script>'
 		return HttpResponse(msg)
 
 def coderesults(request):
@@ -216,24 +216,13 @@ def modifyconfirm(request):
 		err_msg = '<h1>报错信息如下</h1>' + err_msg
 		return HttpResponse(err_msg)
 	mdict = {}
-	if errattr and errattr!=model[0].errattr:
-		mdict.update({'errattr':errattr})
-		# model.update(errattr=errattr)
-	if errpara and errpara!=model[0].errpara:
-		mdict.update({'errpara':errpara})
-		# model.update(errpara=errpara)
-	if syseffect and syseffect!=model[0].syseffect:
-		mdict.update({'syseffect': syseffect})
-		# model.update(syseffect=syseffect)
-	if sysproc and sysproc!=model[0].sysproc:
-		mdict.update({'sysproc': sysproc})
-		# model.update(sysproc=sysproc)
-	if cause and cause!=model[0].cause:
-		mdict.update({'cause': cause})
-		# model.update(cause=cause)
-	if procstep and procstep!=model[0].procstep:
-		mdict.update({'procstep': procstep})
-		# model.update(procstep=procstep)
+	mdict.update({'errattr': errattr})
+	mdict.update({'errpara': errpara})
+	mdict.update({'syseffect': syseffect})
+	mdict.update({'sysproc': sysproc})
+	mdict.update({'cause': cause})
+	mdict.update({'procstep': procstep})
+
 	if len(mdict)==0:
 		return HttpResponse(f'<script type="text/javascript">alert("无改动");</script>')
 	upgradedate = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
