@@ -31,7 +31,7 @@ ALLOWED_HOSTS = ['*']
 # Application definition
 
 INSTALLED_APPS = [
-    'channel',
+    'channels',
     'chat',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -95,8 +95,8 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': 'navi', #数据库名字
         'USER': 'postgres', #用户名
-        "PASSWORD" : 'wy20472183', #自己的密码
-        "HOST":'localhost',
+        'PASSWORD' : 'wy20472183', #自己的密码
+        'HOST':'localhost',
         'PORT':5432,
     }
 }
@@ -139,5 +139,13 @@ USE_TZ = False
 # https://docs.djangoproject.com/en/3.0/howto/static-files/
 
 STATIC_URL = '/static/'
-
-ASGI_APPLICATION = 'DjangoVio.routing.application'
+# channels chat
+ASGI_APPLICATION = 'Vio.routing.application'
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            "hosts": [('192.168.0.4', 6379)],
+        },
+    },
+}

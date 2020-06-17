@@ -25,6 +25,7 @@ router.register(r'users',rq.UserViewSet)
 router.register(r'groups',rq.GroupViewSet)
 
 urlpatterns = [
+    path('chat/',include('chat.urls')),
     path('polls/',include('polls.urls')),
     path('home/',calc_views.index,name='home'),
     path('add/',calc_views.add,name='add'), # add_new
@@ -35,5 +36,4 @@ urlpatterns = [
     path('rq/',include(router.urls)),
     path('rq/api-auth/',include('rest_framework.urls',namespace='rest_framework')),
     path('snippets/',include('snippets.urls')),
-    path('chat/',include('chat.urls')),
 ]
