@@ -1,0 +1,39 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>添加数据</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.3.1/css/bootstrap.min.css">
+    <script src="https://cdn.staticfile.org/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://cdn.staticfile.org/popper.js/1.15.0/umd/popper.min.js"></script>
+    <script src="https://cdn.staticfile.org/twitter-bootstrap/4.3.1/js/bootstrap.min.js"></script>
+    <style>
+        .msgbox {
+            width: 600px;
+            height: 200px;
+        }
+    </style>
+
+    <base target="_self">
+</head>
+<body>
+<form action="otw/" method="POST" novalidate="novalidate">
+    {% csrf_token %}
+    <div class="container-fluid">
+        <div class="row-cols-2">
+            <label>登记加班信息: <br/><textarea class="msgbox" name="procstep"> </textarea></label>
+            <input id="btn_add" class="btn btn-success" type="submit" value="提交"/>
+            <input class="btn btn-primary" type="button" name="backtomain" value ="返回首页" onclick="mainpage()"/>
+        </div>
+    </div>
+</form>
+<script type="text/javascript">
+    function mainpage() {
+        window.location.href='/'
+    }
+</script>
+</body>
+</html>
