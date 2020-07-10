@@ -5,6 +5,7 @@ from django.urls import reverse
 from django.views import generic
 from django.utils import timezone
 from .models import Question,Choice,OverTimeWork
+from datetime import datetime
 
 class IndexView(generic.ListView):
     template_name = 'polls/index.html'
@@ -84,8 +85,9 @@ def OTW(request):
         'project_manager' : tmo[5],
         'reason' : tmo[6],
         'begindate' :" ".join(tmo[7:9]),
-        'begindate'  " ".join(tmo[9:11]}
+        'enddate': " ".join(tmo[9:11]),
+        'msgdate':datetime.now()}
             OverTimeWork.objects.create(**data)
         else:
-            return HttpResponse("<p>熊羊羊 xwx236085 易宝 倪巾钧 融合计费 孙建兵 版本基线调试 2020/7/4 8:30 2020/7/4 18:00</p><br><p> 熊羊羊 xwx236085 易宝 倪巾钧 融合计费 孙建兵 版本基线调试 2020/7/4 8:30 2020/7/4 18:00</p>")
+            return HttpResponse("<p>杨过 xwx12315 神雕 小龙女 侠侣 郭靖 抗金守卫战 2020/7/4 8:30 2020/7/4 18:00<br> 杨过 xwx12315 神雕 小龙女 侠侣 郭靖 抗金守卫战 2020/7/4 8:30 2020/7/4 18:00</p>")
     

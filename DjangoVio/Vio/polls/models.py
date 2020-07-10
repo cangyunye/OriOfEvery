@@ -39,7 +39,9 @@ class OverTimeWork(models.Model):
     project_manager = models.CharField('PM', max_length=20, null=False)
     reason = models.CharField('原因', max_length=128, null=False)
     begindate = models.CharField('开始时间',max_length=24, null=False)
-    enddate = models.CharField('结束时间'，max_length=24, null=False)
+    enddate = models.CharField('结束时间',max_length=24, null=False)
+    msgdate = models.CharField('更新时间',max_length=24, null=False)
+
 
     def __str__(self):
-        return f'OverTimeWork<name = {self.name},jobid = {self.jobid},corporate_firm = {self.corporate_firm},group_leader = {self.group_leader},project_team = {self.project_team},	project_manager = {self.project_manager},reason = {self.reason},begindate = {self.begindate},begindate ={self.enddate}>'
+        return f'OverTimeWork<name = {self.name},jobid = {self.jobid},corporate_firm = {self.corporate_firm},group_leader = {self.group_leader},project_team = {self.project_team},	project_manager = {self.project_manager},reason = {self.reason},begindate = {self.begindate},enddate ={self.enddate}>'

@@ -20,16 +20,19 @@
     <base target="_self">
 </head>
 <body>
-<form action="otw/" method="POST" novalidate="novalidate">
-    {% csrf_token %}
-    <div class="container-fluid">
-        <div class="row-cols-2">
-            <label>登记加班信息: <br/><textarea class="msgbox" name="procstep"> </textarea></label>
-            <input id="btn_add" class="btn btn-success" type="submit" value="提交"/>
-            <input class="btn btn-primary" type="button" name="backtomain" value ="返回首页" onclick="mainpage()"/>
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12">
+                <form action="save/" method="POST" novalidate="novalidate">
+                    {% csrf_token %}
+                            <label>登记加班信息: <br/><textarea class="msgbox" name="procstep"> </textarea></label>
+                            <input id="btn_add" class="btn btn-success" type="submit" value="提交"/>
+                            <input class="btn btn-primary" type="button" name="backtomain" value ="返回首页" onclick="mainpage()"/>
+                </form>
+            </div>
         </div>
     </div>
-</form>
+
 <script type="text/javascript">
     function mainpage() {
         window.location.href='/'

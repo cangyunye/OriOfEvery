@@ -10,7 +10,7 @@ urlpatterns = [
 	path('<int:pk>/results/',views.ResultsView.as_view(),name='results'),
 	path('<int:question_id>/vote/',views.vote,name='vote'),
 	path('wot/',views.WOT,name='WOT'),
-	path('otw/',views.OTW,name='OTW'),
+	path('wot/save/',views.OTW,name='OTW'),
 ]
 # urlpatterns = [
 # 	path('',views.SCindex,name='index'),
